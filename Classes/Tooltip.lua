@@ -220,10 +220,7 @@ function TooltipClass:Draw(x, y, w, h, viewPort)
 	local columns, maxColumnHeight, drawStack = self:CalculateColumns(ttY, ttX, ttH, ttW, viewPort)
 
 	-- background shading currently must be drawn before text lines.  API change will allow something like the commented lines below
-	SetDrawColor(0, 0, 0, .85)
-	--SetDrawLayer(nil, GetDrawLayer() - 5)
-	DrawImage(nil, ttX, ttY + BORDER_WIDTH, ttW * columns - BORDER_WIDTH, maxColumnHeight - 2 * BORDER_WIDTH)
-	--SetDrawLayer(nil, GetDrawLayer())
+
 	SetDrawColor(1, 1, 1)
 	for i, lines in ipairs(drawStack) do 
 		if #lines < 6 then
@@ -250,5 +247,9 @@ function TooltipClass:Draw(x, y, w, h, viewPort)
 	DrawImage(nil, ttX, ttY, ttW * columns, BORDER_WIDTH) -- top border
 	DrawImage(nil, ttX, ttY + maxColumnHeight - BORDER_WIDTH, ttW * columns, BORDER_WIDTH) -- bottom border
 
+	SetDrawColor(0, 0, 0, .85)
+	SetDrawLayer(nil, GetDrawLayer() - 5)
+	DrawImage(nil, ttX, ttY + BORDER_WIDTH, ttW * columns - BORDER_WIDTH, maxColumnHeight - 2 * BORDER_WIDTH)
+	SetDrawLayer(nil, GetDrawLayer())
 	return ttW, ttH
 end
