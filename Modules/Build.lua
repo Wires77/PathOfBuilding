@@ -240,6 +240,12 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 	-- List of display stats
 	-- This defines the stats in the side bar, and also which stats show in node/item comparisons
 	-- This may be user-customisable in the future
+	self.rollUpStats = {
+		{ stat = "TotalDPS", label = "Total DPS", fmt = ".1f", compPercent = true, flag = "notAverage" },
+		{ stat = "TotalDot", label = "DoT DPS", fmt = ".1f", compPercent = true },
+		{ stat = "CombinedDPS", label = "Combined DPS", fmt = ".1f", compPercent = true, flag = "notAverage", condFunc = function(v,o) return v ~= o.TotalDPS and v ~= o.WithImpaleDPS and v ~= o.WithPoisonDPS and v ~= o.WithIgniteDPS and v ~= o.WithBleedDPS end },
+
+	}
 	self.displayStats = {
 		{ stat = "ActiveMinionLimit", label = "Active Minion Limit", fmt = "d" },
 		{ stat = "AverageHit", label = "Average Hit", fmt = ".1f", compPercent = true },
@@ -1140,6 +1146,11 @@ end
 -- Build list of side bar stats
 function buildMode:RefreshStatList()
 	local statBoxList = wipeTable(self.controls.statBox.list)
+	if self.calcsTab.mainEnv.rollUp then
+		t_insert(statBoxList, { height = 18, "^7Roll-up:" })
+		self:AddDisplayStatList(self.rollUpStats, self.calcsTab.mainEnv.rollUp)
+		t_insert(statBoxList, { height = 10 })
+	end
 	if self.calcsTab.mainEnv.minion then
 		t_insert(statBoxList, { height = 18, "^7Minion:" })
 		self:AddDisplayStatList(self.minionDisplayStats, self.calcsTab.mainEnv.minion)

@@ -1635,9 +1635,30 @@ function calcs.perform(env)
 
 	-- Defence/offence calculations
 	calcs.defence(env, env.player)
-	calcs.offence(env, env.player, env.player.mainSkill)
+	env.player.output = calcs.offence(env, env.player, env.player.mainSkill)
 	if env.minion then
 		calcs.defence(env, env.minion)
-		calcs.offence(env, env.minion, env.minion.mainSkill)
+		env.minion.output = calcs.offence(env, env.minion, env.minion.mainSkill)
+	end
+
+	local rollUpOutput = { }
+	for _, activeSkill in ipairs(env.player.activeSkillList) do
+		if activeSkill.socketGroup and activeSkill.socketGroup.includeInRollup then
+			local output = calcs.offence(env, env.player, activeSkill)
+			if output then
+				if activeSkill == env.player.mainSkill then
+					env.player.output = output
+				end
+				for key, val in pairs(output) do
+					if type(val) == "number" then
+						rollUpOutput[key] = rollUpOutput[key] and (rollUpOutput[key] + val * (output.ActiveMinionLimit or 1)) or val
+					end
+				end
+			end
+		end
+	end
+	if next(rollUpOutput) ~= nil then
+		env.rollUp = copyTable(env.player, true)
+		env.rollUp.output = rollUpOutput
 	end
 end
