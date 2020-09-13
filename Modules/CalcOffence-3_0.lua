@@ -204,7 +204,7 @@ end
 function calcs.offence(env, actor, activeSkill)
 	local modDB = actor.modDB
 	local enemyDB = actor.enemy.modDB
-	local output = actor.output
+	local output = copyTable(actor.output)
 	local breakdown = actor.breakdown
 
 	local skillModList = activeSkill.skillModList
@@ -3320,4 +3320,5 @@ function calcs.offence(env, actor, activeSkill)
 			t_insert(breakdown.ImpaleDPS, s_format("= %.1f", output.ImpaleDPS))
 		end
 	end
+	return output
 end

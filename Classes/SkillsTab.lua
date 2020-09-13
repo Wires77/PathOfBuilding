@@ -121,6 +121,11 @@ local SkillsTabClass = newClass("SkillsTab", "UndoHandler", "ControlHost", "Cont
 		self:AddUndoState()
 		self.build.buildFlag = true
 	end)
+	self.controls.includeInRollup = new("CheckBoxControl", {"LEFT",self.controls.groupEnabled,"RIGHT"}, 125, 0, 20, "Include in Roll-up:", function(state)
+		self.displayGroup.includeInRollup = state
+		self:AddUndoState()
+		self.build.buildFlag = true
+	end)
 	self.controls.sourceNote = new("LabelControl", {"TOPLEFT",self.controls.groupSlotLabel,"TOPLEFT"}, 0, 30, 0, 16)
 	self.controls.sourceNote.shown = function()
 		return self.displayGroup.source ~= nil
