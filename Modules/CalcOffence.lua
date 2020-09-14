@@ -219,7 +219,7 @@ function calcs.offence(env, actor, activeSkill)
 	if skillFlags.disable then
 		-- Skill is disabled
 		output.CombinedDPS = 0
-		return
+		return output
 	end
 
 	local function calcAreaOfEffect(skillModList, skillCfg, skillData, skillFlags, output, breakdown)

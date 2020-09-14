@@ -1147,7 +1147,7 @@ end
 function buildMode:RefreshStatList()
 	local statBoxList = wipeTable(self.controls.statBox.list)
 	if self.calcsTab.mainEnv.rollUp then
-		t_insert(statBoxList, { height = 18, "^7Roll-up:" })
+		t_insert(statBoxList, { height = 18, "^7DPS Roll-up:" })
 		self:AddDisplayStatList(self.rollUpStats, self.calcsTab.mainEnv.rollUp)
 		t_insert(statBoxList, { height = 10 })
 	end

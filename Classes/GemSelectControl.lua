@@ -165,6 +165,9 @@ function GemSelectClass:UpdateSortCache()
 				gemInstance.level = gemData.defaultLevel
 			end
 			--Calculate the impact of using this gem
+			if calcFunc() == nil then
+				gemInstance = nil
+			end
 			local output = calcFunc()
 			if oldGem then
 				gemInstance.gemData = oldGem.gemData
@@ -173,6 +176,9 @@ function GemSelectClass:UpdateSortCache()
 				gemList[self.index] = nil
 			end
 			-- Check for nil because some fields may not be populated, default to 0
+			if output == nil then
+				output = nil
+			end
 			sortCache.dps[gemId] = (output.Minion and output.Minion.CombinedDPS) or (output[dpsField] ~= nil and output[dpsField]) or 0
 		end
 		--Color based on the dps
