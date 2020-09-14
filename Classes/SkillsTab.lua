@@ -121,7 +121,7 @@ local SkillsTabClass = newClass("SkillsTab", "UndoHandler", "ControlHost", "Cont
 		self:AddUndoState()
 		self.build.buildFlag = true
 	end)
-	self.controls.includeInRollup = new("CheckBoxControl", {"LEFT",self.controls.groupEnabled,"RIGHT"}, 125, 0, 20, "Include in Roll-up:", function(state)
+	self.controls.includeInRollup = new("CheckBoxControl", {"LEFT",self.controls.groupEnabled,"RIGHT"}, 155, 0, 20, "Include in DPS Roll-up:", function(state)
 		self.displayGroup.includeInRollup = state
 		self:AddUndoState()
 		self.build.buildFlag = true

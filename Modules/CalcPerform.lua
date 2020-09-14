@@ -1484,11 +1484,25 @@ function calcs.perform(env)
 	for _, activeSkill in ipairs(env.player.activeSkillList) do
 		if activeSkill.socketGroup and activeSkill.socketGroup.includeInRollup then
 			local output = calcs.offence(env, env.player, activeSkill)
-			if output then
+			local minionOutput
+			if env.minion then
+				minionOutput = calcs.offence(env, env.minion, env.minion.mainSkill)
+			end
+			if output or minionOutput then
 				if activeSkill == env.player.mainSkill then
 					env.player.output = output
+					if env.minion then
+						env.minion.output = minionOutput
+					end
 				end
+				-- combined player DPS
 				for key, val in pairs(output) do
+					if type(val) == "number" then
+						rollUpOutput[key] = rollUpOutput[key] and (rollUpOutput[key] + val) or val
+					end
+				end
+				-- combined minion DPS
+				for key, val in pairs(minionOutput) do
 					if type(val) == "number" then
 						rollUpOutput[key] = rollUpOutput[key] and (rollUpOutput[key] + val * (output.ActiveMinionLimit or 1)) or val
 					end
