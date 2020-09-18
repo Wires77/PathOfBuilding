@@ -119,7 +119,12 @@ end
 function calcs.buildOutput(build, mode)
 	-- Build output
 	local env = calcs.initEnv(build, mode)
-	calcs.perform(env)
+	for _, activeSkill in ipairs(env.player.activeSkillList) do
+		if activeSkill.socketGroup and activeSkill.socketGroup.includeInRollup then
+			calcs.perform(env)
+		elseif activeSkill == env.player.mainSkill then
+			calcs.perform(env)
+		end
 
 	local output = env.player.output
 
