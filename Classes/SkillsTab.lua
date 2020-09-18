@@ -172,6 +172,7 @@ function SkillsTabClass:Load(xml, fileName)
 		if node.elem == "Skill" then
 			local socketGroup = { }
 			socketGroup.enabled = node.attrib.active == "true" or node.attrib.enabled == "true"
+			socketGroup.includeInRollup = node.attrib.includeInRollup and node.attrib.includeInRollup == "true"
 			socketGroup.label = node.attrib.label
 			socketGroup.slot = node.attrib.slot
 			socketGroup.source = node.attrib.source
@@ -235,6 +236,7 @@ function SkillsTabClass:Save(xml)
 	for _, socketGroup in ipairs(self.socketGroupList) do
 		local node = { elem = "Skill", attrib = {
 			enabled = tostring(socketGroup.enabled),
+			includeInRollup = tostring(socketGroup.includeInRollup),
 			label = socketGroup.label,
 			slot = socketGroup.slot,
 			source = socketGroup.source,
@@ -644,6 +646,7 @@ function SkillsTabClass:SetDisplayGroup(socketGroup)
 		self.controls.groupLabel:SetText(socketGroup.label)
 		self.controls.groupSlot:SelByValue(socketGroup.slot, "slotName")
 		self.controls.groupEnabled.state = socketGroup.enabled
+		self.controls.includeInRollup.state = socketGroup.includeInRollup or socketGroup.disabled
 
 		-- Update the gem slot controls
 		self:UpdateGemSlots()
