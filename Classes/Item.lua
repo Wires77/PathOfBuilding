@@ -62,6 +62,50 @@ end
 
 -- Parse raw item data and extract item name, base type, quality, and modifiers
 function ItemClass:ParseRaw(raw)
+
+	self.sockets = { }
+	self.buffModLines = { }
+	self.enchantModLines = { }
+	self.implicitModLines = { }
+	self.explicitModLines = { }
+	local implicitLines = 0
+	self.variantList = nil
+	self.prefixes = { }
+	self.suffixes = { }
+	self.requirements = { }
+	local importedLevelReq
+	local deferJewelRadiusIndexAssignment
+	local gameModeStage = "FINDIMPLICIT"
+	local foundExplicit, foundImplicit
+	local flaskBuffLines = { }
+	-- Function to set stats based on base type
+	local function setBaseStats(baseName)
+		self.baseName = baseName
+		self.title = self.name
+		self.type = data.itemBases[self.baseName].type
+		self.base = data.itemBases[self.baseName]
+		self.affixes = (self.base.subType and data.itemMods[self.base.type..self.base.subType])
+				or data.itemMods[self.base.type]
+				or data.itemMods.Item
+		self.enchantments = data.enchantments[self.base.type]
+		self.corruptable = self.base.type ~= "Flask" and self.base.subType ~= "Cluster"
+		self.influenceTags = data.specialBaseTags[self.type]
+		self.canBeInfluenced = self.influenceTags
+		self.clusterJewel = data.clusterJewels and data.clusterJewels.jewels[self.baseName]
+		self.requirements.str = self.base.req.str or 0
+		self.requirements.dex = self.base.req.dex or 0
+		self.requirements.int = self.base.req.int or 0
+		local maxReq = m_max(self.requirements.str, self.requirements.dex, self.requirements.int)
+		self.defaultSocketColor = (maxReq == self.requirements.dex and "G") or (maxReq == self.requirements.int and "B") or "R"
+		if self.base.flask and self.base.flask.buff then
+			for _, line in ipairs(self.base.flask.buff) do
+				flaskBuffLines[line] = true
+				local modList, extra = modLib.parseMod(line)
+				t_insert(self.buffModLines, { line = line, extra = extra, modList = modList or { } })
+			end
+		end
+	end
+
 	self.raw = raw
 	self.name = "?"
 	self.rarity = "UNIQUE"
@@ -101,14 +145,23 @@ function ItemClass:ParseRaw(raw)
 	self.namePrefix = ""
 	self.nameSuffix = ""
 	if self.rarity == "NORMAL" or self.rarity == "MAGIC" then
-		for baseName, baseData in pairs(data.itemBases) do
-			local s, e = self.name:find(baseName, 1, true)
-			if s then
-				self.baseName = baseName
-				self.namePrefix = self.name:sub(1, s - 1)
-				self.nameSuffix = self.name:sub(e + 1)
-				self.type = baseData.type
-				break
+		-- Exact match (affix-less magic and normal items)
+		if data.itemBases[self.name] then
+			self.baseName = self.name
+			self.type = data.itemBases[self.name].type
+		else
+			-- Partial match (magic items with affixes)
+			for baseName, baseData in pairs(data.itemBases) do
+				local s, e = self.name:find(baseName, 1, true)
+				if s then
+					-- Set the base name if it isn't there, or we found a better match, so replace it
+					if (self.baseName and string.len(self.namePrefix) > string.len(self.name:sub(1, s - 1)))
+							or self.baseName == nil then
+						self.namePrefix = self.name:sub(1, s - 1)
+						self.nameSuffix = self.name:sub(e + 1)
+						self.type = baseData.type
+					end
+				end
 			end
 		end
 		if not self.baseName then
@@ -122,22 +175,8 @@ function ItemClass:ParseRaw(raw)
 			end
 		end
 		self.name = self.name:gsub(" %(.+%)","")
+		setBaseStats(self.baseName)
 	end
-	self.sockets = { }
-	self.buffModLines = { }
-	self.enchantModLines = { }
-	self.implicitModLines = { }
-	self.explicitModLines = { }
-	local implicitLines = 0
-	self.variantList = nil
-	self.prefixes = { }
-	self.suffixes = { }
-	self.requirements = { }
-	local importedLevelReq
-	local flaskBuffLines = { }
-	local deferJewelRadiusIndexAssignment
-	local gameModeStage = "FINDIMPLICIT"
-	local foundExplicit, foundImplicit
 
 	local function processInfluenceLine(line)
 		for i, curInfluenceInfo in ipairs(influenceInfo) do
@@ -332,39 +371,16 @@ function ItemClass:ParseRaw(raw)
 				if line:gsub("({variant:[%d,]+})", "") == "Two-Toned Boots" then
 					line = "Two-Toned Boots (Armour/Energy Shield)"
 				end
-				local baseName = ""
+				local baseName = self.baseName or ""
 				if self.variant and varSpec then
 					if tonumber(varSpec) == self.variant then
 						baseName = line:gsub("Synthesised ",""):gsub("{variant:([%d,]+)}", "")
 					end
-				else
+				elseif baseName == "" then
 					baseName = line:gsub("Synthesised ",""):gsub("{variant:([%d,]+)}", "")
 				end
 				if baseName and data.itemBases[baseName] then
-					self.baseName = baseName
-					self.title = self.name
-					self.type = data.itemBases[baseName].type
-					self.base = data.itemBases[self.baseName]
-					self.affixes = (self.base.subType and data.itemMods[self.base.type..self.base.subType])
-							or data.itemMods[self.base.type]
-							or data.itemMods.Item
-					self.enchantments = data.enchantments[self.base.type]
-					self.corruptable = self.base.type ~= "Flask" and self.base.subType ~= "Cluster"
-					self.influenceTags = data.specialBaseTags[self.type]
-					self.canBeInfluenced = self.influenceTags
-					self.clusterJewel = data.clusterJewels and data.clusterJewels.jewels[self.baseName]
-					self.requirements.str = self.base.req.str or 0
-					self.requirements.dex = self.base.req.dex or 0
-					self.requirements.int = self.base.req.int or 0
-					local maxReq = m_max(self.requirements.str, self.requirements.dex, self.requirements.int)
-					self.defaultSocketColor = (maxReq == self.requirements.dex and "G") or (maxReq == self.requirements.int and "B") or "R"
-					if self.base.flask and self.base.flask.buff then
-						for _, line in ipairs(self.base.flask.buff) do
-							flaskBuffLines[line] = true
-							local modList, extra = modLib.parseMod(line)
-							t_insert(self.buffModLines, { line = line, extra = extra, modList = modList or { } })
-						end
-					end
+					setBaseStats(baseName)
 				end
 				local fractured = line:match("{fractured}") or line:match(" %(fractured%)")
 				local rangeSpec = line:match("{range:([%d.]+)}")
@@ -452,7 +468,8 @@ function ItemClass:ParseRaw(raw)
 		l = l + 1
 	end
 	if self.baseName then
-		self.name = self.title .. ", " .. self.baseName:gsub(" %(.+%)","")
+		self.name = self.title and self.title .. ", " or ""
+		self.name = self.name .. self.baseName:gsub(" %(.+%)","")
 	end
 	if self.base and not self.requirements.level then
 		if importedLevelReq and #self.sockets == 0 then
