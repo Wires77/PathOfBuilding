@@ -40,6 +40,8 @@ local function writeMods(outName, condFunc)
 					out:write('type = "Prefix", ')
 				elseif mod.GenerationType == 2 then
 					out:write('type = "Suffix", ')
+				elseif mod.GenerationType == 3 then
+					out:write('type = "Unique", ')
 				elseif mod.GenerationType == 5 then
 					out:write('type = "Corrupted", ')
 				end
@@ -93,6 +95,9 @@ writeMods("../Data/ModJewelAbyss.lua", function(mod)
 end)
 writeMods("../Data/ModJewelCluster.lua", function(mod)
 	return mod.Domain == 21 and (mod.GenerationType == 1 or mod.GenerationType == 2 or mod.GenerationType == 5)
+end)
+writeMods("../Data/ModUnique.lua", function(mod)
+	return mod.GenerationType == 3 and (mod.Domain == 1 or mod.Domain == 2 or mod.Domain == 10 or mod.Domain == 13 or mod.Domain == 16 or mod.Domain == 21)
 end)
 
 print("Mods exported.")
