@@ -23,6 +23,6 @@ jobs:
       - name: Set LUA_PATH
         run: export LUA_PATH=./lua/?.lua
       - name: Run tests
-        run: busted -c --lua=/usr/bin/luajit --helper=HeadlessWrapper.lua .
+        run: busted -c --lua=/home/runner/work/PathOfBuilding/PathOfBuilding/.lua/bin/luajit --helper=HeadlessWrapper.lua .
       - name: Report coverage
         run: luacov-coveralls
