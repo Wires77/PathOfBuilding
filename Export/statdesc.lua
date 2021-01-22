@@ -153,6 +153,10 @@ function describeStats(stats)
 				if spec.k == "negate" then
 					val[spec.v].max, val[spec.v].min = -val[spec.v].min, -val[spec.v].max
 				elseif spec.k == "divide_by_one_hundred" then
+					-- Behold, a WTF typo fix for Pure Talent
+					if spec.v == "2reminderstring" then
+						spec.v = 2
+					end
 					val[spec.v].min = round(val[spec.v].min / 100, 1)
 					val[spec.v].max = round(val[spec.v].max / 100, 1)
 					val[spec.v].fmt = "g"
