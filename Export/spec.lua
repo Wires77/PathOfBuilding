@@ -1402,8 +1402,6 @@ return {
 			width=50
 		}
 	},
-	ComponentWeapon={
-	},
 	CooldownBypassTypes={
 	},
 	CooldownGroups={
