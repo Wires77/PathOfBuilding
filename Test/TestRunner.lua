@@ -1,0 +1,11 @@
+require("HeadlessWrapper")
+lfs = require("lfs")
+require 'busted.runner'()
+describe("some", function()
+    it("does something", function()
+        assert.same(1,1)
+    end)
+end)
+
+LoadModule("Test/System/TestAttacks")
+LoadModule("Test/System/TestBuilds")
