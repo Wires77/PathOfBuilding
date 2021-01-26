@@ -6,7 +6,7 @@
 -- Callbacks
 local callbackTable = { }
 local mainObject
-function runCallback(name, ...)
+local function runCallback(name, ...)
 	if callbackTable[name] then
 		return callbackTable[name](...)
 	elseif mainObject and mainObject[name] then
@@ -177,18 +177,18 @@ if mainObject.promptMsg then
 end
 
 -- The build module; once a build is loaded, you can find all the good stuff in here
-build = mainObject.main.modes["BUILD"]
+local build = mainObject.main.modes["BUILD"]
 
 -- Here's some helpful helper functions to help you get started
-function newBuild()
+local function newBuild()
 	mainObject.main:SetMode("BUILD", false, "Help, I'm stuck in Path of Building!")
 	runCallback("OnFrame")
 end
-function loadBuildFromXML(xmlText)
+local function loadBuildFromXML(xmlText)
 	mainObject.main:SetMode("BUILD", false, "", xmlText)
 	runCallback("OnFrame")
 end
-function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
+local function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	mainObject.main:SetMode("BUILD", false, "")
 	runCallback("OnFrame")
 	local charData = build.importTab:ImportItemsAndSkills(getItemsJSON)
@@ -196,3 +196,10 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- You now have a build without a correct main skill selected, or any configuration options set
 	-- Good luck!
 end
+
+
+-- Now you can mess around!
+
+
+-- Probably optional
+runCallback("OnExit")
