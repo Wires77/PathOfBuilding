@@ -1,9 +1,5 @@
 name: Run Tests
-on:
-  push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+on: push
 jobs:
   run_tests:
     runs-on: ubuntu-latest
@@ -25,8 +21,8 @@ jobs:
       - name: Unzip for lua libs
         run: unzip runtime-win32.zip
       - name: Set LUA_PATH
-        run: echo "LUA_PATH=$LUA_PATH;$GITHUB_WORKSPACE/lua/?.lua" >> $GITHUB_ENV
+        run: export LUA_PATH=./lua/?.lua
       - name: Run tests
-        run: busted -c --lua=/home/runner/work/PathOfBuilding/PathOfBuilding/.lua/bin/luajit --helper=HeadlessWrapper.lua .
+        run: busted -c --lua=/usr/bin/luajit --helper=HeadlessWrapper.lua .
       - name: Report coverage
         run: luacov-coveralls
