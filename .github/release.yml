@@ -1,0 +1,14 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    labels:
+      - technical
+      - invalid
+  categories:
+    - title: Implemented Enhancements
+      labels:
+        - enhancement
+    - title: Fixed Bugs
+      labels:
+        - bug
