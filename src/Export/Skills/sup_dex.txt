@@ -205,6 +205,14 @@ local skills, mod, flag, skill = ...
 	},
 #mods
 
+#skill SupportAdditionalQualityPlus
+	statMap = {
+		["supported_active_skill_gem_quality_%"] = {
+			mod("SupportedGemProperty", "LIST", { keyword = "active_skill", key = "quality", value = nil }),
+		},
+	},
+#mods
+
 #skill SupportFasterAttack
 #mods
 
@@ -403,9 +411,9 @@ local skills, mod, flag, skill = ...
 		["support_slower_projectiles_damage_+%_final"] = {
 			mod("Damage", "MORE", nil, ModFlag.Projectile),
 		},
-		["projectiles_damage_+%_to_nearby_targets"] = {
+		["projectiles_damage_+%_vs_nearby_enemies"] = {
 			mod("Damage", "INC", nil, ModFlag.Projectile)
-		}
+		},
 	},
 #mods
 

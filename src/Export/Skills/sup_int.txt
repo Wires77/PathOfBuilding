@@ -199,12 +199,6 @@ local skills, mod, flag, skill = ...
 #mods
 
 #skill SupportCurseOnHitCursePlus
-	statMap = {
-		["number_of_additional_curses_allowed"] = {
-			mod("AdditionalCurse", "BASE", nil),
-			flag("CanHaveAdditionalCurse"),
-		},
-	},
 #mods
 
 #skill SupportMinionFocusFire
@@ -282,11 +276,9 @@ local skills, mod, flag, skill = ...
 #mods
 
 #skill SupportAdditionalXP
-	statMap = {
-		["local_gem_int_requirement_+%"] = {
-			mod("IntRequirement", "INC", nil)
-		}
-	},
+#mods
+
+#skill SupportAdditionalXPPlus
 #mods
 
 #skill SupportFasterCast

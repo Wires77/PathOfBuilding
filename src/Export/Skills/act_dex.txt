@@ -654,7 +654,7 @@ local skills, mod, flag, skill = ...
 	},
 #baseMod skill("radius", 15)
 #baseMod skill("showAverage", true, { type = "SkillPart", skillPart = 1 })
-#baseMod mod("Damage", "MORE", 100, 0, 0, { type = "SkillPart", skillPart = 1 }, { type = "Multiplier", var = "ExplosiveArrowStage", base = -100 })
+#baseMod mod("Damage", "MORE", 100, 0, 0, { type = "SkillPart", skillPart = 1 }, { type = "Multiplier", var = "ExplosiveArrowStageAfterFirst" })
 #mods
 
 #skill ExplosiveConcoction
@@ -1028,10 +1028,14 @@ local skills, mod, flag, skill = ...
 #flags attack melee duration vaal
 	parts = {
 		{
-			name = "Strike",
+			name = "Melee hit",
+			melee = true,
+			projectile = false,
 		},
 		{
-			name = "Beams",
+			name = "Projectiles",
+			melee = false,
+			projectile = true,
 		},
 	},
 	statMap = {
@@ -1457,7 +1461,13 @@ local skills, mod, flag, skill = ...
 #mods
 
 #skill BoneLance
-#flags spell projectile
+#flags spell projectile corpse
+	statMap = {
+		["unearth_base_corpse_level"] = {
+			mod("CorpseLevel", "BASE", nil),
+		},
+	},
+#baseMod skill("corpseMonsterVariety", "Bone Archer")
 #mods
 
 #skill SnappingAdder
@@ -1484,7 +1494,6 @@ local skills, mod, flag, skill = ...
 		},
 	},
 #baseMod skill("poisonIsSkillEffect", true)
-#baseMod skill("stackMultiplier", 2, { type = "Condition", var = "DualWielding" })
 #mods
 
 #skill VolatileDead

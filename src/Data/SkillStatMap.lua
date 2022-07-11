@@ -327,6 +327,9 @@ return {
 	mod("ManaCost", "INC", nil),
 	mult = -1,
 },
+["base_mana_cost_+"] = {
+	mod("ManaCostNoMult", "BASE", nil),
+},
 ["no_mana_cost"] = {
 	mod("ManaCost", "MORE", nil),
 	value = -100,
@@ -1563,6 +1566,9 @@ return {
 ["minions_deal_%_of_physical_damage_as_additional_chaos_damage"] = {
 	mod("MinionModifier", "LIST", { mod = mod("PhysicalDamageGainAsChaos", "BASE", nil) }),
 },
+["maximum_life_+%_for_corpses_you_create"] = {
+	mod("CorpseLife", "INC", nil),
+},
 --Golem
 ["golem_buff_effect_+%"] = {
 	mod("BuffEffect", "INC", nil, 0, 0)
@@ -1599,7 +1605,7 @@ return {
 },
 -- Aura
 ["non_curse_aura_effect_+%"] = {
-	mod("AuraEffect", "INC", nil),
+	mod("AuraEffect", "INC", nil, 0, 0, { type = "SkillType", skillType = SkillType.AppliesCurse, neg = true }),
 },
 ["base_mana_reservation_+%"] = {
 	mod("ManaReserved", "INC", nil)

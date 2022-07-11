@@ -322,8 +322,7 @@ local skills, mod, flag, skill = ...
 	},
 	statMap = {
 		["display_max_blight_stacks"] = {
-			mod("Multiplier:BlightMaxStagesAfterFirst", "BASE", nil, 0, 0, { type = "SkillPart", skillPart = 1 }),
-			base = -1
+			mod("Multiplier:BlightMaxStages", "BASE", nil, 0, 0, { type = "SkillPart", skillPart = 1 }),
 		},
 	},
 #baseMod mod("Damage", "MORE", 100, 0, 0, { type = "Multiplier", var = "BlightStageAfterFirst" })
@@ -339,8 +338,7 @@ local skills, mod, flag, skill = ...
 			mod("ChaosDamageTaken", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Debuff", effectName = "Hinder" }),
 		},
 		["display_max_blight_stacks"] = {
-			mod("Multiplier:BlightMaxStagesAfterFirst", "BASE", nil, 0, 0, { type = "SkillPart", skillPart = 1 }),
-			base = -1
+			mod("Multiplier:BlightMaxStages", "BASE", nil, 0, 0, { type = "SkillPart", skillPart = 1 }),
 		},
 	},
 #baseMod skill("radius", 20)
@@ -422,6 +420,9 @@ local skills, mod, flag, skill = ...
 		["base_mana_regeneration_rate_per_minute"] = {
 			mod("ManaRegen", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Aura" }),
 			div = 60,
+		},
+		["damage_+%_on_full_mana"] = {
+			mod("Damage", "INC", nil, 0, 0, { type = "Condition", var = "FullMana" }, { type = "GlobalEffect", effectType = "Aura" }),
 		},
 	},
 #baseMod skill("radius", 40)
@@ -642,7 +643,7 @@ local skills, mod, flag, skill = ...
 		},
 	},
 #baseMod skill("showAverage", true, { type = "SkillPart", skillPart = 2 })
-#baseMod mod("Multiplier:DivineIreMaxStagesAfterFirst", "BASE", 19, 0, 0, { type = "SkillPart", skillPart = 2 })
+#baseMod mod("Multiplier:DivineIreMaxStages", "BASE", 20, 0, 0, { type = "SkillPart", skillPart = 2 })
 #baseMod skill("radius", 38)
 #mods
 
@@ -653,10 +654,14 @@ local skills, mod, flag, skill = ...
 			mod("ElementalResist", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
 		},
 		["self_elemental_status_duration_-%"] = {
-			mod("SelfIgniteDuration", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
-			mod("SelfChillDuration", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
-			mod("SelfFreezeDuration", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
-			mod("SelfShockDuration", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfIgniteDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfChillDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfFreezeDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfShockDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfScorchDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfBrittleDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mod("SelfSapDuration", "INC", nil, 0, 0, { type = "GlobalEffect", effectType = "Curse" }),
+			mult = -1
 		}
 	},
 #baseMod skill("debuff", true)
@@ -865,8 +870,7 @@ local skills, mod, flag, skill = ...
 		["base_skill_show_average_damage_instead_of_dps"] = {
 		},
 		["flameblast_maximum_stages"] = {
-			mod("Multiplier:FlameblastMaxStagesAfterFirst", "BASE", nil),
-			base = -1
+			mod("Multiplier:FlameblastMaxStages", "BASE", nil),
 		},
 		["flameblast_area_+%_final_per_stage"] = {
 			mod("AreaOfEffect", "MORE", nil, 0, 0, { type = "Multiplier", var = "FlameblastStageAfterFirst" }),
@@ -942,28 +946,70 @@ local skills, mod, flag, skill = ...
 			name = "All Primary Projectiles",
 		},
 	},
-	preDamageFunc = function(activeSkill, output)
+	preDamageFunc = function(activeSkill, output, breakdown)
 		local add
+		local t_insert = table.insert
+		local s_format = string.format
+		local basetakenFlat = activeSkill.skillModList:Sum("BASE", nil, "DamageTaken", "ChaosDamageTaken", "DamageTakenWhenHit", "ChaosDamageTakenWhenHit")
+		local baseTakenInc = activeSkill.skillModList:Sum("INC", nil, "DamageTaken", "ChaosDamageTaken", "DamageTakenWhenHit", "ChaosDamageTakenWhenHit")
+		local baseTakenMore = activeSkill.skillModList:More(nil, "DamageTaken", "ChaosDamageTaken","DamageTakenWhenHit", "ChaosDamageTakenWhenHit")
+		local chaosDamageTaken = math.max((1 + baseTakenInc / 100) * baseTakenMore, 0)
+		local chaosFlat = floor(round(basetakenFlat * chaosDamageTaken), 0)
 		if activeSkill.skillFlags.totem then
-			add = output.TotemLife * activeSkill.skillData.lifeDealtAsChaos / 100
+			life = output.TotemLife
+			energyShield = 0
+			chaosResistance = output.TotemChaosResist
 		else
-			add = output.Life * activeSkill.skillData.lifeDealtAsChaos / 100 + output.EnergyShield * activeSkill.skillData.energyShieldDealtAsChaos / 100
+			life = output.Life
+			energyShield = output.EnergyShield
+			chaosResistance = output.ChaosResist
 		end
+		add = life * activeSkill.skillData.lifeDealtAsChaos + energyShield * activeSkill.skillData.energyShieldDealtAsChaos
+		SelfDamageTakenLife = floor(round(life * activeSkill.skillData.SelfDamageTakenLife) * (100 - chaosResistance) / 100 * chaosDamageTaken)
+		SelfDamageTakenES = floor(round(energyShield * activeSkill.skillData.SelfDamageTakenES) * (100 - chaosResistance) / 100 * chaosDamageTaken)
 		activeSkill.skillData.ChaosMin = activeSkill.skillData.ChaosMin + add
 		activeSkill.skillData.ChaosMax = activeSkill.skillData.ChaosMax + add
 		if activeSkill.skillPart == 2 then
 			activeSkill.skillData.dpsMultiplier = output.ProjectileCount + 1
 		end
+		if breakdown then
+			local FRDamageTaken = {}
+			t_insert(FRDamageTaken, "Damage Taken per Cast")
+			t_insert(FRDamageTaken, s_format("^8=^7 %d^8 (Life) * ^7%d%%^8 (of Life taken as Chaos Damage)", life, activeSkill.skillData.SelfDamageTakenLife * 100))
+			if energyShield ~= 0 then
+				t_insert(FRDamageTaken, s_format("^8+^7 %d^8 (ES) * ^7%d%%^8 (of ES taken as Chaos Damage)", energyShield, activeSkill.skillData.SelfDamageTakenES * 100))
+			end
+			t_insert(FRDamageTaken, s_format("^8=^7 %d^8 (Chaos Damage) * ^7%d%%^8 (Chaos Resistance)", life * activeSkill.skillData.SelfDamageTakenLife + energyShield * activeSkill.skillData.SelfDamageTakenES, chaosResistance))
+			if chaosFlat ~= 0 then
+				t_insert(FRDamageTaken, s_format("^8 -^7 %d^8 (Flat Damage reduction)", -basetakenFlat))
+			end
+			if chaosDamageTaken ~= 1 then
+				t_insert(FRDamageTaken, s_format("^8 * ^7%.2f^8 (Damage taken Multiplier)", chaosDamageTaken))
+			end
+			t_insert(FRDamageTaken, s_format("^8=^7 %d^8 (Damage taken)", SelfDamageTakenLife + SelfDamageTakenES + chaosFlat))
+			breakdown.FRDamageTaken = FRDamageTaken
+		end
+		output.FRDamageTaken = SelfDamageTakenLife + SelfDamageTakenES + chaosFlat
 	end,
 	statMap = {
 		["skill_base_chaos_damage_%_maximum_life"] = {
 			skill("lifeDealtAsChaos", nil),
+			div = 100,
 		},
 		["skill_base_chaos_damage_%_maximum_energy_shield"] = {
 			skill("energyShieldDealtAsChaos", nil),
+			div = 100,
 		},
 		["base_skill_area_of_effect_+%"] = {
 			mod("AreaOfEffect", "INC", nil),
+		},
+		["soulfeast_take_%_maximum_life_as_chaos_damage"] = {
+			skill("SelfDamageTakenLife", nil),
+			div = 100,
+		},
+		["soulfeast_take_%_maximum_energy_shield_as_chaos_damage"] = {
+			skill("SelfDamageTakenES", nil),
+			div = 100,
 		},
 	},
 #baseMod skill("radius", 8)
@@ -1456,7 +1502,7 @@ local skills, mod, flag, skill = ...
 #baseMod mod("Damage", "MORE", 50, 0, bit.bor(KeywordFlag.Hit, KeywordFlag.Ailment), { type = "SkillPart", skillPart = 3 })
 #baseMod skill("radius", 8)
 #baseMod skill("radiusExtra", 1, { type = "Multiplier", var = "PenanceBrandStageAfterFirst" })
-#baseMod mod("Multiplier:PenanceBrandMaxStagesAfterFirst", "BASE", 19, 0, 0, { type = "SkillPart", skillPart = 1 })
+#baseMod mod("Multiplier:PenanceBrandMaxStages", "BASE", 20, 0, 0, { type = "SkillPart", skillPart = 1 })
 #mods
 
 #skill PowerSiphon
@@ -1511,6 +1557,9 @@ local skills, mod, flag, skill = ...
 #baseMod mod("AvoidFreeze", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" })
 #baseMod mod("AvoidChill", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" })
 #baseMod mod("AvoidIgnite", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" })
+#baseMod mod("AvoidSap", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" }),
+#baseMod mod("AvoidBrittle", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" }),
+#baseMod mod("AvoidScorch", "BASE", 100, 0, 0, { type = "GlobalEffect", effectType = "Aura" }),
 #mods
 
 #skill LightningResistAura
@@ -1674,8 +1723,7 @@ local skills, mod, flag, skill = ...
 			base = 100
 		},
 		["display_max_fire_beam_stacks"] = {
-			mod("Multiplier:ScorchingRayMaxStagesAfterFirst", "BASE", nil),
-			base = -1
+			mod("Multiplier:ScorchingRayMaxStages", "BASE", nil),
 		},
 	},
 #baseMod mod("Condition:ScorchingRayMaxStages", "FLAG", true, 0, 0, { type = "MultiplierThreshold", var = "ScorchingRayStageAfterFirst", threshold = 7 })
@@ -1718,6 +1766,9 @@ local skills, mod, flag, skill = ...
 		},
 		["spell_damage_+%"] = {
 			mod("Damage", "INC", nil, ModFlag.Spell, 0, { type = "GlobalEffect", effectType = "Buff", effectName = "Sigil of Power" }),
+		},
+		["base_chance_to_shock_%_from_skill"] = {
+			mod("EnemyShockChance", "BASE", nil, 0, 0, { type = "MultiplierThreshold", var = "SigilOfPowerStage", threshold = 1 }, { type = "GlobalEffect", effectType = "Buff", effectName = "Sigil of Power" }),
 		},
 	},
 #baseMod skill("radius", 30)
@@ -2009,6 +2060,13 @@ local skills, mod, flag, skill = ...
 		["holy_relic_cooldown_recovery_+%"] = {
 			mod("MinionModifier", "LIST", { mod = mod("CooldownRecovery", "INC", nil) }),
 		},
+		["holy_relic_nova_life_regeneration_rate_per_minute"] = {
+			mod("LifeRegen", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Buff", effectName = "Holy Relic's Boon", effectCond = "HolyRelicBoonActive" }),
+			div = 60,
+		},
+		["holy_relic_nova_minion_life_regeneration_rate_per_second"] = {
+			mod("LifeRegen", "BASE", nil, 0, 0, { type = "GlobalEffect", effectType = "Buff", effectName = "Holy Relic's Minion Boon", effectCond = "HolyRelicBoonActive", applyNotPlayer = true, applyMinions = true })
+		},
 	},
 #mods
 
@@ -2166,8 +2224,7 @@ local skills, mod, flag, skill = ...
 			mod("HitRate", "INC", nil, 0, 0, { type = "Multiplier", var = "WinterOrbStageAfterFirst" }),
 		},
 		["frost_fury_max_number_of_stages"] = {
-			mod("Multiplier:WinterOrbMaxStagesAfterFirst", "BASE", nil),
-			base = -1,
+			mod("Multiplier:WinterOrbMaxStages", "BASE", nil),
 		},
 		["frost_fury_base_fire_interval_ms"] = {
 			skill("repeatFrequency", nil),
