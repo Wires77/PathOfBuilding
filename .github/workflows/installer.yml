@@ -11,6 +11,7 @@ jobs:
               with:
                 repository: 'PathOfBuildingCommunity/PathOfBuilding-Installer'
                 ref: 'master'
+                ssh-key: '${{ secrets.POB_INSTALLER_KEY }}'
             - name: Create installer
               run: 'python3 make_release.py'
             - name: Upload artifact
