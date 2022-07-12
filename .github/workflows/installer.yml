@@ -15,5 +15,7 @@ jobs:
             - name: Create installer
               run: 'python3 make_release.py'
             - name: Upload artifact
-              run: 'gh release upload ${{ github.event.release.tag_name }} Dist/* --clobber'
+              run: >
+                echo '${{ secrets.GITHUB_TOKEN }}' | gh auth login --with-token;
+                gh release upload ${{ github.event.release.tag_name }} Dist/* --clobber;
 
