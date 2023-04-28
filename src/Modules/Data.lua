@@ -633,6 +633,7 @@ data.itemMods = {
 	Jewel = LoadModule("Data/ModJewel"),
 	JewelAbyss = LoadModule("Data/ModJewelAbyss"),
 	JewelCluster = LoadModule("Data/ModJewelCluster"),
+	Map = LoadModule("Data/ModMap"),
 }
 data.masterMods = LoadModule("Data/ModMaster")
 data.enchantments = {
@@ -656,7 +657,38 @@ do
 	end
 	setmetatable(data.costs, { __index = function(t, k) return t[map[k]] end })
 end
-data.mapMods = LoadModule("Data/ModMap")
+data.mapMods = {}
+for modId, mod in pairs(data.itemMods.Map) do
+	local weight = 0
+	for _, map_tier in ipairs({"low", "mid", "top"}) do
+		if not data.mapMods[map_tier] then
+			data.mapMods[map_tier] = {}
+			data.mapMods[map_tier].prefixes = {}
+			data.mapMods[map_tier].suffixes = {}
+		end
+		for i, key in ipairs(mod.weightKey) do
+			if (key == map_tier .. "_tier_map") then
+				weight = mod.weightVal[i]
+				break
+			end
+		end
+		for i, key in ipairs(mod.weightMultiplierKey) do
+			if (key == map_tier .. "_tier_map") then
+				weight = weight * mod.weightMultiplierVal[i] / 100
+				break
+			end
+		end
+		if weight > 0 then
+			local affix = {
+				["label"] = mod.affix,
+				["tooltip"] = mod[1],
+				["val"] = mod[1],
+			}
+			t_insert(mod.type == "Prefix" and data.mapMods[map_tier].prefixes or data.mapMods[map_tier].suffixes, affix)
+		end
+	end
+end
+prettyPrintTable(data.mapMods)
 
 -- Manually seeded modifier tag against item slot table for Mastery Item Condition based modifiers
 -- Data is informed by getTagBasedModifiers() located in Item.lua

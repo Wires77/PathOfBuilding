@@ -138,6 +138,9 @@ end)
 writeMods("../Data/ModVeiled.lua", function(mod)
 	return mod.Domain == 28 and (mod.GenerationType == 1 or mod.GenerationType == 2)
 end)
+writeMods("../Data/ModMap.lua", function(mod)
+	return mod.Domain == 5 and (mod.GenerationType == 1 or mod.GenerationType == 2)
+end)
 
 
 print("Mods exported.")
