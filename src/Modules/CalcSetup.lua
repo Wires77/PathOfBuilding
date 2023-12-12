@@ -797,6 +797,9 @@ function calcs.initEnv(build, mode, override, specEnv)
 					scale = parentItem.socketedJewelEffectModifier
 				end
 			end
+			if item and item.type == "Jewel" and item.rarity == "Magic" then
+				scale = scale + env.ModDB:Sum("INC", nil, "CorruptedMagicJewelEffect")
+			end
 			if slot.nodeId and item and item.type == "Jewel" and item.jewelData and item.jewelData.jewelIncEffectFromClassStart then
 				local node = env.spec.nodes[slot.nodeId]
 				if node and node.distanceToClassStart then
