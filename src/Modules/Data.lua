@@ -836,20 +836,22 @@ data.gems = LoadModule("Data/Gems")
 data.gemForSkill = { }
 data.gemForBaseName = { }
 for gemId, gem in pairs(data.gems) do
-	gem.id = gemId
-	gem.grantedEffect = data.skills[gem.grantedEffectId]
-	data.gemForSkill[gem.grantedEffect] = gemId
-	local baseName = gem.name
-	if gem.grantedEffect.support and gem.grantedEffectId ~= "SupportBarrage" then
-		baseName = baseName .. " Support"
+	for skillId, skill in pairs(gem.variants) do
+		gem.id = gemId
+		skill.grantedEffect = data.skills[skill.grantedEffectId]
+		data.gemForSkill[skill.grantedEffect] = gemId
+		local baseName = skill.name
+		if skill.grantedEffect.support and skill.grantedEffectId ~= "SupportBarrage" then
+			baseName = baseName .. " Support"
+		end
+		data.gemForBaseName[baseName] = gemId
+		gem.secondaryGrantedEffect = skill.secondaryGrantedEffectId and data.skills[skill.secondaryGrantedEffectId]
+		gem.grantedEffectList = {
+			skill.grantedEffect,
+			skill.secondaryGrantedEffect
+		}
+		gem.naturalMaxLevel = gem.naturalMaxLevel or (#skill.grantedEffect.levels > 20 and #skill.grantedEffect.levels - 20) or (skill.grantedEffect.levels[3][1] and 3) or 1
 	end
-	data.gemForBaseName[baseName] = gemId
-	gem.secondaryGrantedEffect = gem.secondaryGrantedEffectId and data.skills[gem.secondaryGrantedEffectId]
-	gem.grantedEffectList = {
-		gem.grantedEffect,
-		gem.secondaryGrantedEffect
-	}
-	gem.naturalMaxLevel = gem.naturalMaxLevel or (#gem.grantedEffect.levels > 20 and #gem.grantedEffect.levels - 20) or (gem.grantedEffect.levels[3][1] and 3) or 1
 end
 
 -- Load minions

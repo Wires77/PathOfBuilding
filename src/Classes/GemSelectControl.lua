@@ -65,17 +65,19 @@ function GemSelectClass:PopulateGemList()
 	local matchLevel = self.skillsTab.defaultGemLevel == "characterLevel"
 	local characterLevel = self.skillsTab.build and self.skillsTab.build.characterLevel or 1
 	for gemId, gemData in pairs(self.skillsTab.build.data.gems) do
-		local levelRequirement = gemData.grantedEffect.levels[1].levelRequirement or 1
-		if characterLevel >= levelRequirement or not matchLevel then
-			if (showAwakened or showAll) and gemData.grantedEffect.plusVersionOf then
-				self.gems["Default:" .. gemId] = gemData
-			elseif showNormal or showAll then
-				if self.skillsTab.showAltQualityGems and (self.skillsTab.defaultGemQuality or 0) > 0 then
-					for _, altQual in ipairs(self.skillsTab:getGemAltQualityList(gemData)) do
-						self.gems[altQual.type .. ":" .. gemId] = gemData
-					end
-				else
+		for variantId, gemVariant in pairs(gemData.variants) do
+			local levelRequirement = gemVariant.grantedEffect.levels[1].levelRequirement or 1
+			if characterLevel >= levelRequirement or not matchLevel then
+				if (showAwakened or showAll) and gemVariant.grantedEffect.plusVersionOf then
 					self.gems["Default:" .. gemId] = gemData
+				elseif showNormal or showAll then
+					if self.skillsTab.showAltQualityGems and (self.skillsTab.defaultGemQuality or 0) > 0 then
+						for _, altQual in ipairs(self.skillsTab:getGemAltQualityList(gemData)) do
+							self.gems[altQual.type .. ":" .. gemId] = gemData
+						end
+					else
+						self.gems["Default:" .. gemId] = gemData
+					end
 				end
 			end
 		end

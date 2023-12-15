@@ -233,9 +233,11 @@ local excludedGems = {
 }
 local gems = { }
 for _, gemData in pairs(data.gems) do
-	local grantedEffect = gemData.grantedEffect
-	if grantedEffect.support and not (grantedEffect.plusVersionOf) and not isValueInArray(excludedGems, grantedEffect.name) then
-		table.insert(gems, grantedEffect.name)
+	for _, skill in pairs(gemData.variants) do
+		local grantedEffect = skill.grantedEffect
+		if grantedEffect.support and not (grantedEffect.plusVersionOf) and not isValueInArray(excludedGems, grantedEffect.name) then
+			table.insert(gems, grantedEffect.name)
+		end
 	end
 end
 table.sort(gems)
