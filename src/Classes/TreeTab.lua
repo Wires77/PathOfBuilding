@@ -34,15 +34,8 @@ local TreeTabClass = newClass("TreeTab", "ControlHost", function(self, build)
 
 	local miscTooltip = new("Tooltip")
 
-	-- Controls: top left box
-	SetDrawColor(0.2, 0.2, 0.2)
-	DrawImage(nil, 0, 0, main.screenW, 28)
-	SetDrawColor(0.85, 0.85, 0.85)
-	DrawImage(nil, 0, 28, main.screenW, 4)
-	DrawImage(nil, main.screenW/2 - 2, 0, 4, 28)
-
-	self.anchorTopBarRight = new("Control", nil, function() return main.screenW / 2 + 6 end, 40, 0, 20)
-	self.controls.pointDisplay = new("Control", {"LEFT",self.anchorTopBarRight,"RIGHT"}, -12, 0, 0, 20)
+	self.anchorTopLeft = new("Control", nil, 0, 0, 0, 20)
+	self.controls.pointDisplay = new("Control", {"LEFT",self.anchorTopLeft,"RIGHT"}, -12, 4, 0, 20)
 	self.controls.pointDisplay.x = function(control)
 		local width, height = control:GetSize()
 		return 0
@@ -112,7 +105,7 @@ local TreeTabClass = newClass("TreeTab", "ControlHost", function(self, build)
 			end
 		end
 	end
-	self.controls.classDrop = new("DropDownControl", {"LEFT",self.controls.characterLevel,"RIGHT"}, 8, 0, 100, 20, nil, function(index, value)
+	self.controls.classDrop = new("DropDownControl", {"TOPLEFT",self.controls.pointDisplay,"BOTTOMLEFT"}, 0, 4, 100, 20, nil, function(index, value)
 		if value.classId ~= self.build.spec.curClassId then
 			if self.build.spec:CountAllocNodes() == 0 or self.build.spec:IsClassConnected(value.classId) then
 				self.build.spec:SelectClass(value.classId)
@@ -479,6 +472,8 @@ function TreeTabClass:RemoveTattooFromNode(node)
 end
 
 function TreeTabClass:Draw(viewPort, inputEvents)
+	self.anchorTopLeft.x = viewPort.x + 4
+	self.anchorTopLeft.y = viewPort.y
 	self.anchorControls.x = viewPort.x + 4
 	self.anchorControls.y = viewPort.y + viewPort.height - 24
 
@@ -574,6 +569,17 @@ function TreeTabClass:Draw(viewPort, inputEvents)
 	end
 
 	SetDrawLayer(1)
+	
+	-- top left box
+	local width = self.controls.pointDisplay:GetProperty("x") + self.controls.pointDisplay:GetProperty("width") + 
+			self.controls.levelScalingButton:GetProperty("x") + self.controls.levelScalingButton:GetProperty("width") + 
+			self.controls.characterLevel:GetProperty("x") + self.controls.characterLevel:GetProperty("width")
+			+ 16
+	SetDrawColor(0.2, 0.2, 0.2)
+	DrawImage(nil, viewPort.x, viewPort.y, width, 56)
+	SetDrawColor(0.85, 0.85, 0.85)
+	DrawImage(nil, viewPort.x, viewPort.y + 56, width, 4)
+	DrawImage(nil, viewPort.x + width, viewPort.y, 4, 60)
 
 	SetDrawColor(0.05, 0.05, 0.05)
 	DrawImage(nil, viewPort.x, viewPort.y + viewPort.height - (28 + bottomDrawerHeight + twoLineHeight), viewPort.width, 28 + bottomDrawerHeight + twoLineHeight)
