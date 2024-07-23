@@ -32,6 +32,136 @@ local TreeTabClass = newClass("TreeTab", "ControlHost", function(self, build)
 	self:SetActiveSpec(1)
 	self:SetCompareSpec(1)
 
+	local miscTooltip = new("Tooltip")
+
+	-- Controls: top left box
+	SetDrawColor(0.2, 0.2, 0.2)
+	DrawImage(nil, 0, 0, main.screenW, 28)
+	SetDrawColor(0.85, 0.85, 0.85)
+	DrawImage(nil, 0, 28, main.screenW, 4)
+	DrawImage(nil, main.screenW/2 - 2, 0, 4, 28)
+
+	self.anchorTopBarRight = new("Control", nil, function() return main.screenW / 2 + 6 end, 40, 0, 20)
+	self.controls.pointDisplay = new("Control", {"LEFT",self.anchorTopBarRight,"RIGHT"}, -12, 0, 0, 20)
+	self.controls.pointDisplay.x = function(control)
+		local width, height = control:GetSize()
+		return 0
+	end
+	self.controls.pointDisplay.width = function(control)
+		control.str, control.req = self:EstimatePlayerProgress()
+		return DrawStringWidth(16, "FIXED", control.str) + 8
+	end
+	self.controls.pointDisplay.Draw = function(control)
+		local x, y = control:GetPos()
+		local width, height = control:GetSize()
+		SetDrawColor(1, 1, 1)
+		DrawImage(nil, x, y, width, height)
+		SetDrawColor(0, 0, 0)
+		DrawImage(nil, x + 1, y + 1, width - 2, height - 2)
+		SetDrawColor(1, 1, 1)
+		DrawString(x + 4, y + 2, "LEFT", 16, "FIXED", control.str)
+		if control:IsMouseInBounds() then
+			SetDrawLayer(nil, 10)
+			miscTooltip:Clear()
+			miscTooltip:AddLine(16, control.req)
+			miscTooltip:Draw(x, y, width, height, main.viewPort)
+			SetDrawLayer(nil, 0)
+		end
+	end
+	self.controls.levelScalingButton = new("ButtonControl", {"LEFT",self.controls.pointDisplay,"RIGHT"}, 12, 0, 50, 20, self.build.characterLevelAutoMode and "Auto" or "Manual", function()
+		self.build.characterLevelAutoMode = not self.build.characterLevelAutoMode
+		self.controls.levelScalingButton.label = self.build.characterLevelAutoMode and "Auto" or "Manual"
+		self.build.configTab:BuildModList()
+		self.build.modFlag = true
+		self.build.buildFlag = true
+	end)
+	self.controls.characterLevel = new("EditControl", {"LEFT",self.controls.levelScalingButton,"RIGHT"}, 8, 0, 106, 20, "", "Level", "%D", 3, function(buf)
+		print(buf)
+		self.build.characterLevel = m_min(m_max(tonumber(buf) or 1, 1), 100)
+		self.build.configTab:BuildModList()
+		self.build.modFlag = true
+		self.build.buildFlag = true
+		self.build.characterLevelAutoMode = false
+		self.controls.levelScalingButton.label = "Manual"
+	end)
+	self.controls.characterLevel:SetText(self.build.characterLevel)
+	self.controls.characterLevel.tooltipFunc = function(tooltip)
+		if tooltip:CheckForUpdate(self.build.characterLevel) then
+			tooltip:AddLine(16, "Experience multiplier:")
+			local playerLevel = self.build.characterLevel
+			local safeZone = 3 + m_floor(playerLevel / 16)
+			for level, expLevel in ipairs(self.build.data.monsterExperienceLevelMap) do
+				local diff = m_abs(playerLevel - expLevel) - safeZone
+				local mult
+				if diff <= 0 then
+					mult = 1
+				else
+					mult = ((playerLevel + 5) / (playerLevel + 5 + diff ^ 2.5)) ^ 1.5
+				end
+				if playerLevel >= 95 then
+					mult = mult * (1 / (1 + 0.1 * (playerLevel - 94)))
+				end
+				if mult > 0.01 then
+					local line = level
+					if level >= 68 then 
+						line = line .. string.format(" (Tier %d)", level - 67)
+					end
+					line = line .. string.format(": %.1f%%", mult * 100)
+					tooltip:AddLine(14, line)
+				end
+			end
+		end
+	end
+	self.controls.classDrop = new("DropDownControl", {"LEFT",self.controls.characterLevel,"RIGHT"}, 8, 0, 100, 20, nil, function(index, value)
+		if value.classId ~= self.build.spec.curClassId then
+			if self.build.spec:CountAllocNodes() == 0 or self.build.spec:IsClassConnected(value.classId) then
+				self.build.spec:SelectClass(value.classId)
+				self.build.spec:AddUndoState()
+				self.build.spec:SetWindowTitleWithBuildClass()
+				self.build.buildFlag = true
+			else
+				main:OpenConfirmPopup("Class Change", "Changing class to "..value.label.." will reset your passive tree.\nThis can be avoided by connecting one of the "..value.label.." starting nodes to your tree.", "Continue", function()
+					self.build.spec:SelectClass(value.classId)
+					self.build.spec:AddUndoState()
+					self.build.spec:SetWindowTitleWithBuildClass()
+					self.build.buildFlag = true					
+				end)
+			end
+		end
+	end)
+	self.controls.ascendDrop = new("DropDownControl", {"LEFT",self.controls.classDrop,"RIGHT"}, 8, 0, 120, 20, nil, function(index, value)
+		self.build.spec:SelectAscendClass(value.ascendClassId)
+		self.build.spec:AddUndoState()
+		self.build.spec:SetWindowTitleWithBuildClass()
+		self.build.buildFlag = true
+	end)
+	-- // hiding away until we learn more, this dropdown and the Loadout dropdown conflict for UI space, will need to address if secondaryAscendancies come back
+	--self.controls.secondaryAscendDrop = new("DropDownControl", {"LEFT",self.controls.ascendDrop,"RIGHT"}, 8, 0, 120, 20, nil, function(index, value)
+	--	self.build.spec:SelectSecondaryAscendClass(value.ascendClassId)
+	--	self.build.spec:AddUndoState()
+	--	self.build.spec:SetWindowTitleWithBuildClass()
+	--	self.build.buildFlag = true
+	--end)
+
+	-- Initialise class dropdown
+	for classId, class in pairs(self.build.latestTree.classes) do
+		local ascendancies = {}
+		-- Initialise ascendancy dropdown
+		for i = 0, #class.classes do
+			local ascendClass = class.classes[i]
+			t_insert(ascendancies, {
+				label = ascendClass.name,
+				ascendClassId = i,
+			})
+		end
+		t_insert(self.controls.classDrop.list, {
+			label = class.name,
+			classId = classId,
+			ascendancies = ascendancies,
+		})
+	end
+	table.sort(self.controls.classDrop.list, function(a, b) return a.label < b.label end)
+
 	self.anchorControls = new("Control", nil, 0, 0, 0, 20)
 
 	-- Tree list dropdown
@@ -265,6 +395,82 @@ local TreeTabClass = newClass("TreeTab", "ControlHost", function(self, build)
 	self.jumpToY = 0
 end)
 
+local acts = {
+	-- https://www.poewiki.net/wiki/Passive_skill
+	[1] = { level = 1, questPoints = 0 },
+	-- Act 1   : The Dweller of the Deep
+	-- Act 1   : The Marooned Mariner
+	[2] = { level = 12, questPoints = 2 },
+	-- Act 1,2 : The Way Forward (Reward after reaching Act 2)
+	-- Act 2   : Through Sacred Ground (Fellshrine Reward 3.25)
+	[3] = { level = 22, questPoints = 4 },
+	-- Act 3   : Victario's Secrets
+	-- Act 3   : Piety's Pets
+	[4] = { level = 32, questPoints = 6 },
+	-- Act 4   : An Indomitable Spirit
+	[5] = { level = 40, questPoints = 7 },
+	-- Act 5   : In Service to Science
+	-- Act 5   : Kitava's Torments
+	[6] = { level = 44, questPoints = 9 },
+	-- Act 6   : The Father of War
+	-- Act 6   : The Puppet Mistress
+	-- Act 6   : The Cloven One
+	[7] = { level = 50, questPoints = 12 },
+	-- Act 7   : The Master of a Million Faces
+	-- Act 7   : Queen of Despair
+	-- Act 7   : Kishara's Star
+	[8] = { level = 54, questPoints = 15 },
+	-- Act 8   : Love is Dead
+	-- Act 8   : Reflection of Terror
+	-- Act 8   : The Gemling Legion
+	[9] = { level = 60, questPoints = 18 },
+	-- Act 9   : Queen of the Sands
+	-- Act 9   : The Ruler of Highgate
+	[10] = { level = 64, questPoints = 20 },
+	-- Act 10  : Vilenta's Vengeance
+	-- Act 10  : An End to Hunger (+2)
+	[11] = { level = 67, questPoints = 23 },
+}
+
+local function actExtra(act, extra)
+	-- Act 2 : Deal With The Bandits (+1 if the player kills all bandits)
+	return act > 2 and extra or 0
+end
+function TreeTabClass:EstimatePlayerProgress()
+	local PointsUsed, AscUsed, SecondaryAscUsed = self.build.spec:CountAllocNodes()
+	local extra = self.build.calcsTab.mainOutput and self.build.calcsTab.mainOutput.ExtraPoints or 0
+	local usedMax, ascMax, secondaryAscMax, level, act = 99 + 23 + extra, 8, 8, 1, 0
+
+	-- Find estimated act and level based on points used
+	repeat
+		act = act + 1
+		level = m_min(m_max(PointsUsed + 1 - acts[act].questPoints - actExtra(act, extra), acts[act].level), 100)
+	until act == 11 or level <= acts[act + 1].level
+	
+	if self.build.characterLevelAutoMode and self.build.characterLevel ~= level then
+		self.build.characterLevel = level
+		self.controls.characterLevel:SetText(self.build.characterLevel)
+		self.build.configTab:BuildModList()
+	end
+
+	-- Ascendancy points for lab
+	-- this is a recommendation for beginners who are using Path of Building for the first time and trying to map out progress in PoB
+	local labSuggest = level < 33 and ""
+		or level < 55 and "\nLabyrinth: Normal Lab"
+		or level < 68 and "\nLabyrinth: Cruel Lab"
+		or level < 75 and "\nLabyrinth: Merciless Lab"
+		or level < 90 and "\nLabyrinth: Uber Lab"
+		or ""
+	
+	if PointsUsed > usedMax then InsertIfNew(self.controls.warnings.lines, "You have too many passive points allocated") end
+	if AscUsed > ascMax then InsertIfNew(self.controls.warnings.lines, "You have too many ascendancy points allocated") end
+	if SecondaryAscUsed > secondaryAscMax then InsertIfNew(self.controls.warnings.lines, "You have too many secondary ascendancy points allocated") end
+	self.build.Act = level < 90 and act <= 10 and act or "Endgame"
+	
+	return string.format("%s%3d / %3d   %s%d / %d", PointsUsed > usedMax and colorCodes.NEGATIVE or "^7", PointsUsed, usedMax, AscUsed > ascMax and colorCodes.NEGATIVE or "^7", AscUsed, ascMax),
+		"Required Level: "..level.."\nEstimated Progress:\nAct: "..self.build.Act.."\nQuestpoints: "..acts[act].questPoints.."\nExtra Skillpoints: "..actExtra(act, extra)..labSuggest
+end
+
 function TreeTabClass:RemoveTattooFromNode(node)
 	self.build.spec.tree.nodes[node.id].isTattoo = false
 	self.build.spec.hashOverrides[node.id] = nil
@@ -306,6 +512,13 @@ function TreeTabClass:Draw(viewPort, inputEvents)
 		end
 	end
 	self:ProcessControlsInput(inputEvents, viewPort)
+
+	self.controls.classDrop:SelByValue(self.build.spec.curClassId, "classId")
+	self.controls.ascendDrop.list = self.controls.classDrop:GetSelValueByKey("ascendancies")
+	self.controls.ascendDrop:SelByValue(self.build.spec.curAscendClassId, "ascendClassId")
+	-- // secondaryAscend dropdown hidden away until we learn more
+	--self.controls.secondaryAscendDrop.list = {{label = "None", ascendClassId = 0}, {label = "Warden", ascendClassId = 1}, {label = "Warlock", ascendClassId = 2}, {label = "Primalist", ascendClassId = 3}}
+	--self.controls.secondaryAscendDrop:SelByValue(self.build.spec.curSecondaryAscendClassId, "ascendClassId")
 
 	-- Determine positions if one line of controls doesn't fit in the screen width
 	local twoLineHeight = 24

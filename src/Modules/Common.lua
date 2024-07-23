@@ -438,6 +438,14 @@ function mergeDB(srcDB, modDB)
 	end
 end
 
+function InsertIfNew(t, val)
+	if (not t) then return end
+	for i,v in ipairs(t) do
+		if v == val then return end
+	end
+	table.insert(t, val)
+end
+
 function specCopy(env)
 	local modDB = new("ModDB")
 	modDB:AddDB(env.modDB)

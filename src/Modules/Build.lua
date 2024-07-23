@@ -15,14 +15,6 @@ local s_format = string.format
 
 local buildMode = new("ControlHost")
 
-local function InsertIfNew(t, val)
-	if (not t) then return end
-	for i,v in ipairs(t) do
-		if v == val then return end
-	end
-	table.insert(t, val)
-end
-
 function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 	self.dbFileName = dbFileName
 	self.buildName = buildName
@@ -130,110 +122,7 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 
 	-- Controls: top bar, right side
 	self.anchorTopBarRight = new("Control", nil, function() return main.screenW / 2 + 6 end, 4, 0, 20)
-	self.controls.pointDisplay = new("Control", {"LEFT",self.anchorTopBarRight,"RIGHT"}, -12, 0, 0, 20)
-	self.controls.pointDisplay.x = function(control)
-		local width, height = control:GetSize()
-		if self.controls.saveAs:GetPos() + self.controls.saveAs:GetSize() < self.anchorTopBarRight:GetPos() - width - 16 then
-			return -12 - width
-		else
-			return 0
-		end
-	end
-	self.controls.pointDisplay.width = function(control)
-		control.str, control.req = self:EstimatePlayerProgress()
-		return DrawStringWidth(16, "FIXED", control.str) + 8
-	end
-	self.controls.pointDisplay.Draw = function(control)
-		local x, y = control:GetPos()
-		local width, height = control:GetSize()
-		SetDrawColor(1, 1, 1)
-		DrawImage(nil, x, y, width, height)
-		SetDrawColor(0, 0, 0)
-		DrawImage(nil, x + 1, y + 1, width - 2, height - 2)
-		SetDrawColor(1, 1, 1)
-		DrawString(x + 4, y + 2, "LEFT", 16, "FIXED", control.str)
-		if control:IsMouseInBounds() then
-			SetDrawLayer(nil, 10)
-			miscTooltip:Clear()
-			miscTooltip:AddLine(16, control.req)
-			miscTooltip:Draw(x, y, width, height, main.viewPort)
-			SetDrawLayer(nil, 0)
-		end
-	end
-	self.controls.levelScalingButton = new("ButtonControl", {"LEFT",self.controls.pointDisplay,"RIGHT"}, 12, 0, 50, 20, self.characterLevelAutoMode and "Auto" or "Manual", function()
-		self.characterLevelAutoMode = not self.characterLevelAutoMode
-		self.controls.levelScalingButton.label = self.characterLevelAutoMode and "Auto" or "Manual"
-		self.configTab:BuildModList()
-		self.modFlag = true
-		self.buildFlag = true
-	end)
-	self.controls.characterLevel = new("EditControl", {"LEFT",self.controls.levelScalingButton,"RIGHT"}, 8, 0, 106, 20, "", "Level", "%D", 3, function(buf)
-		self.characterLevel = m_min(m_max(tonumber(buf) or 1, 1), 100)
-		self.configTab:BuildModList()
-		self.modFlag = true
-		self.buildFlag = true
-		self.characterLevelAutoMode = false
-		self.controls.levelScalingButton.label = "Manual"
-	end)
-	self.controls.characterLevel:SetText(self.characterLevel)
-	self.controls.characterLevel.tooltipFunc = function(tooltip)
-		if tooltip:CheckForUpdate(self.characterLevel) then
-			tooltip:AddLine(16, "Experience multiplier:")
-			local playerLevel = self.characterLevel
-			local safeZone = 3 + m_floor(playerLevel / 16)
-			for level, expLevel in ipairs(self.data.monsterExperienceLevelMap) do
-				local diff = m_abs(playerLevel - expLevel) - safeZone
-				local mult
-				if diff <= 0 then
-					mult = 1
-				else
-					mult = ((playerLevel + 5) / (playerLevel + 5 + diff ^ 2.5)) ^ 1.5
-				end
-				if playerLevel >= 95 then
-					mult = mult * (1 / (1 + 0.1 * (playerLevel - 94)))
-				end
-				if mult > 0.01 then
-					local line = level
-					if level >= 68 then 
-						line = line .. string.format(" (Tier %d)", level - 67)
-					end
-					line = line .. string.format(": %.1f%%", mult * 100)
-					tooltip:AddLine(14, line)
-				end
-			end
-		end
-	end
-	self.controls.classDrop = new("DropDownControl", {"LEFT",self.controls.characterLevel,"RIGHT"}, 8, 0, 100, 20, nil, function(index, value)
-		if value.classId ~= self.spec.curClassId then
-			if self.spec:CountAllocNodes() == 0 or self.spec:IsClassConnected(value.classId) then
-				self.spec:SelectClass(value.classId)
-				self.spec:AddUndoState()
-				self.spec:SetWindowTitleWithBuildClass()
-				self.buildFlag = true
-			else
-				main:OpenConfirmPopup("Class Change", "Changing class to "..value.label.." will reset your passive tree.\nThis can be avoided by connecting one of the "..value.label.." starting nodes to your tree.", "Continue", function()
-					self.spec:SelectClass(value.classId)
-					self.spec:AddUndoState()
-					self.spec:SetWindowTitleWithBuildClass()
-					self.buildFlag = true					
-				end)
-			end
-		end
-	end)
-	self.controls.ascendDrop = new("DropDownControl", {"LEFT",self.controls.classDrop,"RIGHT"}, 8, 0, 120, 20, nil, function(index, value)
-		self.spec:SelectAscendClass(value.ascendClassId)
-		self.spec:AddUndoState()
-		self.spec:SetWindowTitleWithBuildClass()
-		self.buildFlag = true
-	end)
-	-- // hiding away until we learn more, this dropdown and the Loadout dropdown conflict for UI space, will need to address if secondaryAscendancies come back
-	--self.controls.secondaryAscendDrop = new("DropDownControl", {"LEFT",self.controls.ascendDrop,"RIGHT"}, 8, 0, 120, 20, nil, function(index, value)
-	--	self.spec:SelectSecondaryAscendClass(value.ascendClassId)
-	--	self.spec:AddUndoState()
-	--	self.spec:SetWindowTitleWithBuildClass()
-	--	self.buildFlag = true
-	--end)
-	self.controls.buildLoadouts = new("DropDownControl", {"LEFT",self.controls.ascendDrop,"RIGHT"}, 8, 0, 190, 20, {}, function(index, value)
+	self.controls.buildLoadouts = new("DropDownControl", {"LEFT",self.anchorTopBarRight,"RIGHT"}, 8, 0, 190, 20, {}, function(index, value)
 		if value == "^7^7Loadouts:" or value == "^7^7-----" then
 			self.controls.buildLoadouts:SetSel(1)
 			return
@@ -336,6 +225,14 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 
 		self.controls.buildLoadouts:SelByValue(value)
 	end)
+	self.controls.buildLoadouts.x = function(control)
+		local width, height = control:GetSize()
+		if self.controls.saveAs:GetPos() + self.controls.saveAs:GetSize() < self.anchorTopBarRight:GetPos() - width - 16 then
+				return -12 - width
+		else
+				return 0
+		end
+	end
 
 	-- List of display stats
 	-- This defines the stats in the side bar, and also which stats show in node/item comparisons
@@ -751,26 +648,6 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 	
 	--special rebuild to properly initialise boss placeholders
 	self.configTab:BuildModList()
-
-	-- Initialise class dropdown
-	for classId, class in pairs(self.latestTree.classes) do
-		local ascendancies = {}
-		-- Initialise ascendancy dropdown
-		for i = 0, #class.classes do
-			local ascendClass = class.classes[i]
-			t_insert(ascendancies, {
-				label = ascendClass.name,
-				ascendClassId = i,
-			})
-		end
-		t_insert(self.controls.classDrop.list, {
-			label = class.name,
-			classId = classId,
-			ascendancies = ascendancies,
-		})
-	end
-	table.sort(self.controls.classDrop.list, function(a, b) return a.label < b.label end)
-
 	-- Load legacy bandit and pantheon choices from build section
 	for _, control in ipairs({ "bandit", "pantheonMajorGod", "pantheonMinorGod" }) do
 		self.configTab.input[control] = self[control]
@@ -847,48 +724,6 @@ function buildMode:Init(dbFileName, buildName, buildXML, convertBuild)
 
 	self.abortSave = false
 	self:SyncLoadouts()
-end
-
-local acts = {
-	-- https://www.poewiki.net/wiki/Passive_skill
-	[1] = { level = 1, questPoints = 0 },
-	-- Act 1   : The Dweller of the Deep
-	-- Act 1   : The Marooned Mariner
-	[2] = { level = 12, questPoints = 2 },
-	-- Act 1,2 : The Way Forward (Reward after reaching Act 2)
-	-- Act 2   : Through Sacred Ground (Fellshrine Reward 3.25)
-	[3] = { level = 22, questPoints = 4 },
-	-- Act 3   : Victario's Secrets
-	-- Act 3   : Piety's Pets
-	[4] = { level = 32, questPoints = 6 },
-	-- Act 4   : An Indomitable Spirit
-	[5] = { level = 40, questPoints = 7 },
-	-- Act 5   : In Service to Science
-	-- Act 5   : Kitava's Torments
-	[6] = { level = 44, questPoints = 9 },
-	-- Act 6   : The Father of War
-	-- Act 6   : The Puppet Mistress
-	-- Act 6   : The Cloven One
-	[7] = { level = 50, questPoints = 12 },
-	-- Act 7   : The Master of a Million Faces
-	-- Act 7   : Queen of Despair
-	-- Act 7   : Kishara's Star
-	[8] = { level = 54, questPoints = 15 },
-	-- Act 8   : Love is Dead
-	-- Act 8   : Reflection of Terror
-	-- Act 8   : The Gemling Legion
-	[9] = { level = 60, questPoints = 18 },
-	-- Act 9   : Queen of the Sands
-	-- Act 9   : The Ruler of Highgate
-	[10] = { level = 64, questPoints = 20 },
-	-- Act 10  : Vilenta's Vengeance
-	-- Act 10  : An End to Hunger (+2)
-	[11] = { level = 67, questPoints = 23 },
-}
-
-local function actExtra(act, extra)
-	-- Act 2 : Deal With The Bandits (+1 if the player kills all bandits)
-	return act > 2 and extra or 0
 end
 
 function buildMode:SyncLoadouts(reset)
@@ -1016,41 +851,6 @@ function buildMode:SyncLoadouts(reset)
 	end
 
 	return treeList, itemList, skillList, configList
-end
-
-function buildMode:EstimatePlayerProgress()
-	local PointsUsed, AscUsed, SecondaryAscUsed = self.spec:CountAllocNodes()
-	local extra = self.calcsTab.mainOutput and self.calcsTab.mainOutput.ExtraPoints or 0
-	local usedMax, ascMax, secondaryAscMax, level, act = 99 + 23 + extra, 8, 8, 1, 0
-
-	-- Find estimated act and level based on points used
-	repeat
-		act = act + 1
-		level = m_min(m_max(PointsUsed + 1 - acts[act].questPoints - actExtra(act, extra), acts[act].level), 100)
-	until act == 11 or level <= acts[act + 1].level
-	
-	if self.characterLevelAutoMode and self.characterLevel ~= level then
-		self.characterLevel = level
-		self.controls.characterLevel:SetText(self.characterLevel)
-		self.configTab:BuildModList()
-	end
-
-	-- Ascendancy points for lab
-	-- this is a recommendation for beginners who are using Path of Building for the first time and trying to map out progress in PoB
-	local labSuggest = level < 33 and ""
-		or level < 55 and "\nLabyrinth: Normal Lab"
-		or level < 68 and "\nLabyrinth: Cruel Lab"
-		or level < 75 and "\nLabyrinth: Merciless Lab"
-		or level < 90 and "\nLabyrinth: Uber Lab"
-		or ""
-	
-	if PointsUsed > usedMax then InsertIfNew(self.controls.warnings.lines, "You have too many passive points allocated") end
-	if AscUsed > ascMax then InsertIfNew(self.controls.warnings.lines, "You have too many ascendancy points allocated") end
-	if SecondaryAscUsed > secondaryAscMax then InsertIfNew(self.controls.warnings.lines, "You have too many secondary ascendancy points allocated") end
-	self.Act = level < 90 and act <= 10 and act or "Endgame"
-	
-	return string.format("%s%3d / %3d   %s%d / %d", PointsUsed > usedMax and colorCodes.NEGATIVE or "^7", PointsUsed, usedMax, AscUsed > ascMax and colorCodes.NEGATIVE or "^7", AscUsed, ascMax),
-		"Required Level: "..level.."\nEstimated Progress:\nAct: "..self.Act.."\nQuestpoints: "..acts[act].questPoints.."\nExtra Skillpoints: "..actExtra(act, extra)..labSuggest
 end
 
 function buildMode:CanExit(mode)
@@ -1272,13 +1072,6 @@ function buildMode:OnFrame(inputEvents)
 		end
 	end
 	self:ProcessControlsInput(inputEvents, main.viewPort)
-
-	self.controls.classDrop:SelByValue(self.spec.curClassId, "classId")
-	self.controls.ascendDrop.list = self.controls.classDrop:GetSelValueByKey("ascendancies")
-	self.controls.ascendDrop:SelByValue(self.spec.curAscendClassId, "ascendClassId")
-	-- // secondaryAscend dropdown hidden away until we learn more
-	--self.controls.secondaryAscendDrop.list = {{label = "None", ascendClassId = 0}, {label = "Warden", ascendClassId = 1}, {label = "Warlock", ascendClassId = 2}, {label = "Primalist", ascendClassId = 3}}
-	--self.controls.secondaryAscendDrop:SelByValue(self.spec.curSecondaryAscendClassId, "ascendClassId")
 
 	if self.buildFlag then
 		-- Wipe Global Cache
