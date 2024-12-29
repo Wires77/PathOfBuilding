@@ -163,7 +163,8 @@ function require(name)
 	return l_require(name)
 end
 
-
+package.path = package.path .. ";../runtime/lua/?.lua;../runtime/lua/?/init.lua"
+inputXML = arg[1]
 dofile("Launch.lua")
 
 -- Prevents loading of ModCache
@@ -201,3 +202,6 @@ function loadBuildFromJSON(getItemsJSON, getPassiveSkillsJSON)
 	-- You now have a build without a correct main skill selected, or any configuration options set
 	-- Good luck!
 end
+
+loadBuildFromXML(inputXML)
+print(mainObject.main.modes["BUILD"]:SaveDB("code"))
