@@ -23,5 +23,6 @@ jobs:
                 branch: pob2-pr-${{ github.event.client_payload.id }}
                 body: |
                   ${{ github.event.client_payload.msg }}
+                author: ${{ github.event.client_payload.name || github.event.client_payload.user }} <${{ github.event.client_payload.user }}@users.noreply.github.com>
                 commit-message: ${{ github.event.client_payload.msg }}
                 labels: ${{ github.event.client_payload.labels }}
