@@ -11,7 +11,7 @@ While holding shift scroll bars in the help section and version history will jum
 
 General Shortcuts:
 
-Ctrl + 1	Jump to tree tab
+Ctrl + 1	Jump to trees tab
 Ctrl + 2	Jump to skills tab
 Ctrl + 3	Jump to items tab
 Ctrl + 4	Jump to calcs tab
