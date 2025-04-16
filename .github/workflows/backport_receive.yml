@@ -19,8 +19,9 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v5
               with:
-                title: Port changes from PoB2 PR ${{ github.event.client_payload.id }}
+                title: \[pob2-port\] ${{ github.event.client_payload.title }}
                 branch: pob2-pr-${{ github.event.client_payload.id }}
                 body: |
                   ${{ github.event.client_payload.msg }}
                 commit-message: ${{ github.event.client_payload.msg }}
+                labels: ${{ github.event.client_payload.labels }}
