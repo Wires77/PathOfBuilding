@@ -47,6 +47,8 @@ local function writeMods(outName, condFunc)
 							out:write('type = "Synthesis", ')
 						elseif mod.Family[2] and mod.Family[2].Id:match("MatchedInfluencesTier") then
 							out:write('type = "'..mod.Family[2].Id:match("%d+")..mod.Family[1].Id:match("(.-)Influence")..'", ')
+						elseif mod.Id:match("^MutatedUnique") then
+							out:write('type = "Foulborn", ')
 						end
 					elseif mod.Domain == 16 then
 						out:write('type = "DelveImplicit", ')
@@ -63,6 +65,25 @@ local function writeMods(outName, condFunc)
 					out:write('type = "Eater", ')
 				end
 				out:write('affix = "', mod.Name, '", ')
+
+				if mod.Id == "RitualRingLife" then
+					
+					local tradeStatIds = { }
+					-- for _, stat in ipairs(stats) do
+					-- 	table.insert(tradeStatIds, stat.Id)
+					-- end
+					local modHash = murmurHash2(mod.Stat1.Id, 0xC58F1A7B)
+					print("Hash for mod '"..mod.Id.."': "..modHash)
+					local byteArray = ""
+					for i = 0, 3 do
+						byteArray = byteArray .. tostring(bit.band(bit.rshift(modHash, (i * 8)), 0xFF))
+					end
+					local tradeHash = murmurHash2(byteArray, 0x02312233)
+					print("TradeHash = "..tradeHash)
+
+					out:write('tradeHash = "', tradeHash, '", ')
+				end
+
 				for index, value in pairs(mod.Family) do
 					if string.find(value.Id, "LocalDisplayNearbyEnemy") and #stats > index and #orders > index then
 						table.remove(stats, index)
@@ -124,7 +145,7 @@ local function writeMods(outName, condFunc)
 				out:write('modTags = { ', stats.modTags, ' }, ')
 				out:write('},\n')
 			else
-				print("Mod '"..mod.Id.."' has no stats")
+				--print("Mod '"..mod.Id.."' has no stats")
 			end
 		end
 		::continue::
@@ -179,7 +200,7 @@ writeMods("../Data/ModItemExclusive.lua", function(mod) -- contains primarily un
 		and not mod.Id:match("^Synthesis") and not mod.Id:match("Royale")
 		and not mod.Id:match("Cowards") and not mod.Id:match("Map")
 		and not mod.Id:match("Ultimatum") and not mod.Id:match("^MutatedUnique")
-end)
+end)	
 writeMods("../Data/ModGraft.lua", function(mod)
 	return mod.Domain == 38 and (mod.GenerationType == 1 or mod.GenerationType == 2 or mod.GenerationType == 5)
 end)
