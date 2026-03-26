@@ -15,27 +15,27 @@ local catalystTags = {
 	["critical"] = true,
 }
 local itemTypes = {
-	-- "axe",
-	-- "bow",
-	-- "claw",
-	-- "dagger",
-	-- "fishing",
-	-- "mace",
-	-- "staff",
-	-- "sword",
-	-- "wand",
-	-- "helmet",
-	-- "body",
-	-- "gloves",
-	-- "boots",
-	-- "shield",
-	-- "quiver",
-	-- "amulet",
-	-- "ring",
-	-- "belt",
-	-- "jewel",
-	-- "flask",
-	-- "tincture",
+	"axe",
+	"bow",
+	"claw",
+	"dagger",
+	"fishing",
+	"mace",
+	"staff",
+	"sword",
+	"wand",
+	"helmet",
+	"body",
+	"gloves",
+	"boots",
+	"shield",
+	"quiver",
+	"amulet",
+	"ring",
+	"belt",
+	"jewel",
+	"flask",
+	"tincture",
 }
 local function writeMods(out, statOrder)
 	local orders = { }
@@ -51,6 +51,8 @@ local function writeMods(out, statOrder)
 end
 
 local uniqueMods = LoadModule("../Data/ModItemExclusive.lua")
+local modVeiled = LoadModule("../Data/ModVeiled.lua")
+
 for _, name in ipairs(itemTypes) do
 	local out = io.open("../Data/Uniques/"..name..".lua", "w")
 	local statOrder = {}
@@ -77,17 +79,9 @@ for _, name in ipairs(itemTypes) do
 			local prefix = ""
 			local variantString = line:match("({variant:[%d,]+})")
 			local fractured = line:match("({fractured})") or ""
-			local cleanLine = line:gsub("{.-}", "")
-			-- Check if this is a mod ID: purely alphanumeric+underscore, optionally followed by [num,num] ranges
-			local modName = cleanLine:match("^([%a%d_ ]+)%[") or cleanLine:match("^([%a%d_ ]+)$")
-			local legacy = modName and cleanLine:sub(#modName + 1) or ""
-			-- Legacy ranges must contain actual brackets, not just stray characters
-			if legacy ~= "" and not legacy:match("%[") then
-				legacy = ""
-				modName = nil
-			end
-			local mod = modName and uniqueMods[modName]
-			if mod or (modName and legacy ~= "") then
+			local modName, legacy = line:gsub("{.+}", ""):match("^([%a%d_]+)([%[%]-,%d]*)")
+			local mod = uniqueMods[modName] or modVeiled[modName]
+			if mod then
 				modLines = modLines + 1
 				if variantString then
 					prefix = prefix ..variantString
@@ -130,30 +124,17 @@ for _, name in ipairs(itemTypes) do
 						ConPrintf("Warning: Could not find mod data for legacy mod '%s' in %s", modName, name)
 					end
 				end
-				local modText = legacyMod or mod
-				if modText then
-					local order
-					for i, line in ipairs(modText) do
-						if i == 1 then
-							order = mod and mod.statOrder and mod.statOrder[i] or (nextOrder)
-						end
-						nextOrder = nextOrder + 1
-						if statOrder[order] then
-							table.insert(statOrder[order], prefix..line)
-						else
-							statOrder[order] = { prefix..line }
-						end
+				for i, line in ipairs(legacyMod or mod) do
+					local order = math.floor(mod.statOrder[i])
+					if statOrder[order] then
+						table.insert(statOrder[order], prefix..line)
+					else
+						statOrder[order] = { prefix..line }
 					end
 				end
 			else
 				if modLines > 0 or implicits then -- treat as post line e.g. mirrored, or unresolved text mod
-					-- Unresolved text lines get a sequential order to preserve position among mods
-					if statOrder[nextOrder] then
-						table.insert(statOrder[nextOrder], line)
-					else
-						statOrder[nextOrder] = { line }
-					end
-					nextOrder = nextOrder + 1
+					table.insert(postModLines, line)
 				else
 					out:write(line, "\n")
 				end
@@ -176,10 +157,6 @@ for _, name in ipairs(itemTypes) do
 			statOrder = { }
 			modLines = 0
 		end
-	end
-	writeMods(out, statOrder)
-	for _, line in ipairs(postModLines) do
-		out:write(line, "\n")
 	end
 	out:close()
 end
