@@ -7943,7 +7943,7 @@ return {
 	["RitualRingAffliction"] = { affix = "", "Grants level 20 Affliction", statOrder = { 60 }, level = 63, group = "RitualRingAffliction", weightKey = { }, weightVal = {  }, modTags = {  }, },
 	["RitualRingPacify"] = { affix = "", "Grants level 20 Pacify", statOrder = { 61 }, level = 63, group = "RitualRingPacify", weightKey = { }, weightVal = {  }, modTags = {  }, },
 	["RitualRingCastSpeed"] = { affix = "", "(6-12)% increased Cast Speed", statOrder = { 1446 }, level = 1, group = "IncreasedCastSpeed", weightKey = { }, weightVal = {  }, modTags = { "caster", "speed" }, },
-	["RitualRingLife"] = { affix = "", "+(30-60) to maximum Life", statOrder = { 1569 }, level = 1, group = "IncreasedLife", weightKey = { }, weightVal = {  }, modTags = { "resource", "life" }, },
+	["RitualRingLife"] = { affix = "", tradeHash = "1583235262", "+(30-60) to maximum Life", statOrder = { 1569 }, level = 1, group = "IncreasedLife", weightKey = { }, weightVal = {  }, modTags = { "resource", "life" }, },
 	["RitualRingMana"] = { affix = "", "+(30-60) to maximum Mana", statOrder = { 1579 }, level = 1, group = "IncreasedMana", weightKey = { }, weightVal = {  }, modTags = { "resource", "mana" }, },
 	["RitualRingEnergyShield"] = { affix = "", "+(30-60) to maximum Energy Shield", statOrder = { 1558 }, level = 1, group = "EnergyShield", weightKey = { }, weightVal = {  }, modTags = { "defences", "energy_shield" }, },
 	["KeyStoneRetaliationHitsUnique_1"] = { affix = "", "Arsenal of Vengeance", statOrder = { 10807 }, level = 1, group = "RetaliationHits", weightKey = { }, weightVal = {  }, modTags = {  }, },

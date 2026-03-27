@@ -48,7 +48,7 @@ local function writeMods(outName, condFunc)
 						elseif mod.Family[2] and mod.Family[2].Id:match("MatchedInfluencesTier") then
 							out:write('type = "'..mod.Family[2].Id:match("%d+")..mod.Family[1].Id:match("(.-)Influence")..'", ')
 						elseif mod.Id:match("^MutatedUnique") then
-							out:write('type = "Foulborn", ')
+							out:write('type = "Explicit", ')
 						end
 					elseif mod.Domain == 16 then
 						out:write('type = "DelveImplicit", ')

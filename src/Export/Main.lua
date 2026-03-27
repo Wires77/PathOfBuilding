@@ -67,6 +67,7 @@ local remainingScripts = { }
 function main:Init()
 	self.inputEvents = { }
 	self.popups = { }
+	self.onFrameFuncs = { }
 
 	self.datSpecs = LoadModule("spec")
 
@@ -415,6 +416,9 @@ function main:Shutdown()
 end
 
 function main:OnFrame()
+	for _, onFrameFunc in pairs(self.onFrameFuncs) do
+		onFrameFunc()
+	end
 	self.screenW, self.screenH = GetVirtualScreenSize()
 
 	self.viewPort = { x = 0, y = 0, width = self.screenW, height = self.screenH }

@@ -581,6 +581,7 @@ data.itemMods = {
 	JewelAbyss = LoadModule("Data/ModJewelAbyss"),
 	JewelCluster = LoadModule("Data/ModJewelCluster"),
 	JewelCharm = LoadModule("Data/ModJewelCharm"),
+	Foulborn = LoadModule("Data/ModFoulborn"),
 }
 data.masterMods = LoadModule("Data/ModMaster")
 data.enchantments = {

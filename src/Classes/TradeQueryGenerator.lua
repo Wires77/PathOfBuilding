@@ -104,8 +104,8 @@ local function logToFile(...)
 	ConPrintf(...)
 end
 
-local TradeQueryGeneratorClass = newClass("TradeQueryGenerator", function(self, queryTab)
-	self:InitMods()
+local TradeQueryGeneratorClass = newClass("TradeQueryGenerator", function(self, queryTab, init)
+	if init then self:InitMods() end
 	self.queryTab = queryTab
 	self.itemsTab = queryTab.itemsTab
 	self.calcContext = { }
@@ -435,6 +435,7 @@ function TradeQueryGeneratorClass:InitMods()
 	self:GenerateModData(data.itemMods.Jewel, tradeQueryStatsParsed, { ["BaseJewel"] = true, ["AnyJewel"] = true })
 	self:GenerateModData(data.itemMods.JewelAbyss, tradeQueryStatsParsed, { ["AbyssJewel"] = true, ["AnyJewel"] = true })
 	self:GenerateModData(data.itemMods.Flask, tradeQueryStatsParsed, { ["Flask"] = true })
+	self:GenerateModData(data.itemMods.Foulborn, tradeQueryStatsParsed, regularItemMask)
 
 	-- Special handling for essences
 	for _, essenceItem in pairs(data.essences) do
