@@ -52,6 +52,33 @@ end
 
 local uniqueMods = LoadModule("../Data/ModItemExclusive.lua")
 local modVeiled = LoadModule("../Data/ModVeiled.lua")
+local foulbornMap = LoadModule("../Data/ModFoulbornMap2.lua")
+local foulbornMods = LoadModule("../Data/ModFoulborn.lua")
+
+-- local shadowOut = {}
+
+-- function shadowOut:Init(filename, mode)
+-- 	self.out = io.open(filename, mode)
+-- 	self.numFoulbornVariants = 0
+-- 	self.foulbornVariantTbl = { }
+-- end
+
+-- function shadowOut:write(...)
+-- 	for idx = 1, self.numFoulbornVariants do
+-- 		table.insert(self.foulbornVariantTbl[idx], ...)
+-- 	end
+-- 	self.out:write(...)
+-- end
+
+-- function shadowOut:flush()
+
+-- end
+
+-- function shadowOut:close()
+-- 	self.out:close()
+-- end
+
+
 
 for _, name in ipairs(itemTypes) do
 	local out = io.open("../Data/Uniques/"..name..".lua", "w")
@@ -59,6 +86,8 @@ for _, name in ipairs(itemTypes) do
 	local postModLines = {}
 	local modLines = 0
 	local implicits
+	local uniqueName
+	local numFoulbornVariants = 0
 	local nextOrder = 100000
 	for line in io.lines("Uniques/"..name..".lua") do
 		if implicits then -- remove 1 downs to 0
@@ -71,11 +100,17 @@ for _, name in ipairs(itemTypes) do
 				out:write(line, "\n")
 			end
 			out:write(line, "\n")
+			uniqueName = nil
+			numFoulbornVariants = 0
 			statOrder = { }
 			postModLines = { }
 			modLines = 0
 			nextOrder = 100000
 		elseif not specName then
+			if uniqueName == nil then
+				uniqueName = line:match('(.+)')
+				numFoulbornVariants = foulbornMap[uniqueName] and #foulbornMap[uniqueName] or 0
+			end
 			local prefix = ""
 			local variantString = line:match("({variant:[%d,]+})")
 			local fractured = line:match("({fractured})") or ""
@@ -83,17 +118,23 @@ for _, name in ipairs(itemTypes) do
 			local mod = uniqueMods[modName] or modVeiled[modName]
 			if mod then
 				modLines = modLines + 1
+				for i = 1, numFoulbornVariants do
+					local variant = foulbornMap[uniqueName][i]
+					local isModInVariant = variant.explicits["explicit.stat_" .. mod.tradeHash]
+					if not isModInVariant then
+						mod = foulbornMods[variant.mutated]
+						break
+					end
+				end
 				if variantString then
 					prefix = prefix ..variantString
 				end
 
 				local tags = {}
-				if mod then
-					if isValueInArray({"amulet", "ring", "belt"}, name) then
-						for _, tag in ipairs(mod.modTags) do
-							if catalystTags[tag] then
-								table.insert(tags, tag)
-							end
+				if isValueInArray({"amulet", "ring", "belt"}, name) then
+					for _, tag in ipairs(mod.modTags) do
+						if catalystTags[tag] then
+							table.insert(tags, tag)
 						end
 					end
 				end
