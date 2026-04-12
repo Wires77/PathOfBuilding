@@ -65,24 +65,19 @@ local function writeMods(outName, condFunc)
 					out:write('type = "Eater", ')
 				end
 				out:write('affix = "', mod.Name, '", ')
-
-				if mod.Id == "RitualRingLife" then
-					
-					local tradeStatIds = { }
-					-- for _, stat in ipairs(stats) do
-					-- 	table.insert(tradeStatIds, stat.Id)
-					-- end
-					local modHash = murmurHash2(mod.Stat1.Id, 0xC58F1A7B)
-					print("Hash for mod '"..mod.Id.."': "..modHash)
-					local byteArray = ""
-					for i = 0, 3 do
-						byteArray = byteArray .. tostring(bit.band(bit.rshift(modHash, (i * 8)), 0xFF))
+				local byteArray = ""
+				-- Concatenate all stat hashes into byte array
+				for statIndex = 1, 6 do
+					if mod["Stat"..statIndex] and mod["Stat"..statIndex].Id ~= "" then
+						local modHash = murmurHash2(mod["Stat"..statIndex].Id, 0xC58F1A7B)
+						for i = 0, 3 do
+							local byteVal = bit.band(bit.rshift(modHash, (i * 8)), 0xFF)
+							byteArray = byteArray .. string.char(byteVal)
+						end
 					end
-					local tradeHash = murmurHash2(byteArray, 0x02312233)
-					print("TradeHash = "..tradeHash)
-
-					out:write('tradeHash = "', tradeHash, '", ')
 				end
+				local tradeHash = murmurHash2(byteArray, 0x02312233)
+				out:write('tradeHash = "', tradeHash, '", ')
 
 				for index, value in pairs(mod.Family) do
 					if string.find(value.Id, "LocalDisplayNearbyEnemy") and #stats > index and #orders > index then
