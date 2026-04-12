@@ -266,28 +266,28 @@ function describeStats(stats)
 					val[spec.v].min = val[spec.v].min / 2
 					val[spec.v].max = val[spec.v].max / 2
 				elseif spec.k == "divide_by_five" then
-					val[spec.v].min = round(val[spec.v].min / 5, 1)
-					val[spec.v].max = round(val[spec.v].max / 5, 1)
+					val[spec.v].min = val[spec.v].min / 5
+					val[spec.v].max = val[spec.v].max / 5
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_six" then
-					val[spec.v].min = round(val[spec.v].min / 6, 1)
-					val[spec.v].max = round(val[spec.v].max / 6, 1)
+					val[spec.v].min = val[spec.v].min / 6
+					val[spec.v].max = val[spec.v].max / 6
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_ten_1dp_if_required" or spec.k == "divide_by_ten_1dp" then
 					val[spec.v].min = round(val[spec.v].min / 10, 1)
 					val[spec.v].max = round(val[spec.v].max / 10, 1)
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_twelve" then
-					val[spec.v].min = round(val[spec.v].min / 12, 1)
-					val[spec.v].max = round(val[spec.v].max / 12, 1)
+					val[spec.v].min = val[spec.v].min / 12
+					val[spec.v].max = val[spec.v].max / 12
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_twenty" then
-					val[spec.v].min = round(val[spec.v].min / 20, 1)
-					val[spec.v].max = round(val[spec.v].max / 20, 1)
+					val[spec.v].min = val[spec.v].min / 20
+					val[spec.v].max = val[spec.v].max / 20
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_one_hundred" then
-					val[spec.v].min = round(val[spec.v].min / 100, 1)
-					val[spec.v].max = round(val[spec.v].max / 100, 1)
+					val[spec.v].min = val[spec.v].min / 100
+					val[spec.v].max = val[spec.v].max / 100
 					val[spec.v].fmt = "g"
 				elseif spec.k == "divide_by_one_hundred_1dp" then
 					val[spec.v].min = round(val[spec.v].min / 100, 1)
@@ -420,8 +420,19 @@ end
 
 function describeMod(mod)
 	local stats = { }
+	local buffTemplateStats = { }
+	for _, buffTemplateKey in ipairs({ "BuffTemplate1", "BuffTemplate2" }) do
+		local buffTemplate = mod[buffTemplateKey]
+		if buffTemplate and buffTemplate.Stats then
+			for _, stat in ipairs(buffTemplate.Stats) do
+				if stat and stat.Id then
+					buffTemplateStats[stat.Id] = true
+				end
+			end
+		end
+	end
 	for i = 1, 6 do
-		if mod["Stat"..i] then
+		if mod["Stat"..i] and not buffTemplateStats[mod["Stat"..i].Id] then
 			stats[mod["Stat"..i].Id] = { min = mod["Stat"..i.."Value"][1], max = mod["Stat"..i.."Value"][2] }
 		end
 	end
