@@ -55,61 +55,83 @@ local modVeiled = LoadModule("../Data/ModVeiled.lua")
 local foulbornMap = LoadModule("../Data/ModFoulbornMap2.lua")
 local foulbornMods = LoadModule("../Data/ModFoulborn.lua")
 
--- local shadowOut = {}
 
--- function shadowOut:Init(filename, mode)
--- 	self.out = io.open(filename, mode)
--- 	self.numFoulbornVariants = 0
--- 	self.foulbornVariantTbl = { }
--- end
-
--- function shadowOut:write(...)
--- 	for idx = 1, self.numFoulbornVariants do
--- 		table.insert(self.foulbornVariantTbl[idx], ...)
--- 	end
--- 	self.out:write(...)
--- end
-
--- function shadowOut:flush()
-
--- end
-
--- function shadowOut:close()
--- 	self.out:close()
--- end
-
-
+local function writeUniqueVariant(out, preModLines, modDataList, postModLines, variantIndex, uniqueName, numFoulbornVariants)
+	-- Write pre-mod lines
+	for _, line in ipairs(preModLines) do
+		out:write(line, "\n")
+	end
+	
+	-- Process and write mods for this variant
+	local variantStatOrder = {}
+	for _, modData in ipairs(modDataList) do
+		local prefix = modData.prefix
+		local mod = modData.mod
+		local modName = modData.modName
+		local legacyMod = modData.legacyMod
+		
+		-- Check if this mod needs replacement for this variant
+		if numFoulbornVariants > 0 and variantIndex > 0 and variantIndex <= numFoulbornVariants then
+			local variant = foulbornMap["Foulborn " ..uniqueName][variantIndex]
+			local isModInVariant = variant.explicits["explicit.stat_" .. mod.tradeHash]
+			if not isModInVariant then
+				mod = foulbornMods[variant.mutated]
+			end
+		end
+		
+		-- Add mod lines with prefix
+		for i, line in ipairs(legacyMod or mod) do
+			local order = math.floor(mod.statOrder[i])
+			if not variantStatOrder[order] then
+				variantStatOrder[order] = {}
+			end
+			table.insert(variantStatOrder[order], prefix..line)
+		end
+	end
+	
+	writeMods(out, variantStatOrder)
+	
+	-- Write post-mod lines
+	for _, line in ipairs(postModLines) do
+		out:write(line, "\n")
+	end
+end
 
 for _, name in ipairs(itemTypes) do
 	local out = io.open("../Data/Uniques/"..name..".lua", "w")
-	local statOrder = {}
+	local modDataList = {}
 	local postModLines = {}
+	local preModLines = {}
 	local modLines = 0
 	local implicits
 	local uniqueName
 	local numFoulbornVariants = 0
 	local nextOrder = 100000
+	local inMods = false
 	for line in io.lines("Uniques/"..name..".lua") do
 		if implicits then -- remove 1 downs to 0
 			implicits = implicits - 1
 		end
 		local specName, specVal = line:match("^([%a ]+): (.+)$")
 		if line:match("]],") then -- start new unique
-			writeMods(out, statOrder)
-			for _, line in ipairs(postModLines) do
-				out:write(line, "\n")
+			-- Write all variants of the current unique
+			writeUniqueVariant(out, preModLines, modDataList, postModLines, 0, uniqueName, 0)
+			for i = 1, numFoulbornVariants do
+				writeUniqueVariant(out, preModLines, modDataList, postModLines, i, uniqueName, numFoulbornVariants)
 			end
 			out:write(line, "\n")
 			uniqueName = nil
 			numFoulbornVariants = 0
-			statOrder = { }
-			postModLines = { }
+			modDataList = {}
+			postModLines = {}
+			preModLines = {}
 			modLines = 0
+			inMods = false
 			nextOrder = 100000
 		elseif not specName then
 			if uniqueName == nil then
 				uniqueName = line:match('(.+)')
-				numFoulbornVariants = foulbornMap[uniqueName] and #foulbornMap[uniqueName] or 0
+				numFoulbornVariants = foulbornMap["Foulborn " .. uniqueName] and #foulbornMap["Foulborn " .. uniqueName] or 0
 			end
 			local prefix = ""
 			local variantString = line:match("({variant:[%d,]+})")
@@ -118,14 +140,8 @@ for _, name in ipairs(itemTypes) do
 			local mod = uniqueMods[modName] or modVeiled[modName]
 			if mod then
 				modLines = modLines + 1
-				for i = 1, numFoulbornVariants do
-					local variant = foulbornMap[uniqueName][i]
-					local isModInVariant = variant.explicits["explicit.stat_" .. mod.tradeHash]
-					if not isModInVariant then
-						mod = foulbornMods[variant.mutated]
-						break
-					end
-				end
+				inMods = true
+				
 				if variantString then
 					prefix = prefix ..variantString
 				end
@@ -165,38 +181,48 @@ for _, name in ipairs(itemTypes) do
 						ConPrintf("Warning: Could not find mod data for legacy mod '%s' in %s", modName, name)
 					end
 				end
-				for i, line in ipairs(legacyMod or mod) do
-					local order = math.floor(mod.statOrder[i])
-					if statOrder[order] then
-						table.insert(statOrder[order], prefix..line)
-					else
-						statOrder[order] = { prefix..line }
-					end
-				end
+				
+				-- Store mod data for later processing
+				table.insert(modDataList, {
+					prefix = prefix,
+					mod = mod,
+					modName = modName,
+					legacyMod = legacyMod
+				})
 			else
-				if modLines > 0 or implicits then -- treat as post line e.g. mirrored, or unresolved text mod
+				if modLines > 0 or implicits or inMods then -- treat as post line e.g. mirrored, or unresolved text mod
 					table.insert(postModLines, line)
 				else
-					out:write(line, "\n")
+					table.insert(preModLines, line)
 				end
 			end
 		else -- spec line
 			if specName == "Implicits" then
 				implicits = tonumber(specVal)
 			else
-				out:write(line, "\n")
+				if modLines > 0 or inMods then
+					table.insert(postModLines, line)
+				else
+					table.insert(preModLines, line)
+				end
 			end
 		end
 		if implicits and implicits == 0 then
 			local lines = 0
-			for _, l in pairs(statOrder) do
-				lines = lines + #l
+			for _, modData in ipairs(modDataList) do
+				lines = lines + #(modData.legacyMod or modData.mod)
 			end
-			out:write("Implicits: "..lines, "\n")
-			writeMods(out, statOrder)
+			table.insert(preModLines, "Implicits: "..lines)
+			-- Move modDataList to a separate implicits section
+			writeUniqueVariant(out, preModLines, modDataList, {}, 0, uniqueName, 0)
+			for i = 1, numFoulbornVariants do
+				writeUniqueVariant(out, preModLines, modDataList, {}, i, uniqueName, numFoulbornVariants)
+			end
 			implicits = nil
-			statOrder = { }
+			preModLines = {}
+			modDataList = {}
 			modLines = 0
+			inMods = false
 		end
 	end
 	out:close()

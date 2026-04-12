@@ -2,9 +2,10 @@
 -- Item data (c) Grinding Gear Games
 
 return {
-	["Foulborn Unnatural Instinct"] = {
+	["Foulborn The Aylardex"] = {
 		{
-			explicits = { ["Allocated Small Passive Skills in Radius grant nothing"] = true, },
-			mutated = { "Grants all bonuses of Unallocated Notable Passive Skills in Radius", },
+			explicits = { ["explicit.stat_2262736444"] = true, ["explicit.stat_1050105434"] = true, ["explicit.stat_3872306017"] = true, ["explicit.stat_227523295"] = true, ["explicit.stat_1325047894"] = true, ["explicit.stat_2847548062"] = true, ["explicit.stat_2102212273"] = true, },
+			mutated = "MutatedUniqueAmluet24EldritchBattery",
 		},
 	},
+}
