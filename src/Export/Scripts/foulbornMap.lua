@@ -12,7 +12,7 @@ LoadModule("../Classes/TradeQueryRateLimiter")
 local function appendModMapToFile(modMap)
 	local out = io.open("../Data/ModFoulbornMap2.lua", "a")
 	for itemName, modLists in pairs(modMap) do
-		out:write('\t["', itemName, '"] = {\n')
+		out:write('\b\t["', itemName, '"] = {\n') -- \b is a backspace character to remove the closing brace, then we re-add it after in case this is the last call
 		for _, modList in ipairs(modLists) do
 			out:write('\t\t{\n')
 			out:write('\t\t\texplicits = { ')
@@ -23,7 +23,7 @@ local function appendModMapToFile(modMap)
 			out:write('\t\t\tmutated = "', modList.mutated, '",\n')
 			out:write('\t\t},\n')
 		end
-		out:write('\t},\n')
+		out:write('\t},\n}')
 	end
 	out:close()
 end
