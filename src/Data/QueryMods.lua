@@ -53604,27 +53604,26 @@ return {
 		}, 
 		["346_IncreasedCastSpeedSpellEcho"] = {
 			["1HMace"] = {
-				["max"] = 20, 
-				["min"] = 18, 
+				["max"] = 1, 
+				["min"] = 1, 
 			}, 
 			["1HWeapon"] = {
-				["max"] = 20, 
-				["min"] = 18, 
+				["max"] = 1, 
+				["min"] = 1, 
 			}, 
 			["Dagger"] = {
-				["max"] = 20, 
-				["min"] = 18, 
+				["max"] = 1, 
+				["min"] = 1, 
 			}, 
 			["Wand"] = {
-				["max"] = 20, 
-				["min"] = 18, 
+				["max"] = 1, 
+				["min"] = 1, 
 			}, 
-			["sign"] = "", 
 			["specialCaseData"] = {
 			}, 
 			["tradeMod"] = {
-				["id"] = "explicit.stat_438778966", 
-				["text"] = "Socketed Gems are Supported by Level # Spell Echo", 
+				["id"] = "explicit.stat_725896422", 
+				["text"] = "Socketed Gems are Supported by Level 10 Spell Echo", 
 				["type"] = "explicit", 
 			}, 
 		}, 

@@ -130,8 +130,11 @@ for _, name in ipairs(itemTypes) do
 	local explicitDataList = {}
 	local postModLines = {}
 	local preModLines = {}
+	local preModLines = {}
 	local modLines = 0
 	local implicits
+	local uniqueName
+	local numFoulbornVariants = 0
 	local uniqueName
 	local numFoulbornVariants = 0
 	local nextOrder = 100000
@@ -178,6 +181,7 @@ for _, name in ipairs(itemTypes) do
 			preModLines = {}
 			modLines = 0
 			inMods = false
+			inMods = false
 			nextOrder = 100000
 		elseif line:match("%[%[") then
 			inUnique = true
@@ -196,11 +200,17 @@ for _, name in ipairs(itemTypes) do
 				modLines = modLines + 1
 				inMods = true
 				
+				inMods = true
+				
 				if variantString then
 					prefix = prefix ..variantString
 				end
 
 				local tags = {}
+				if isValueInArray({"amulet", "ring", "belt"}, name) then
+					for _, tag in ipairs(mod.modTags) do
+						if catalystTags[tag] then
+							table.insert(tags, tag)
 				if isValueInArray({"amulet", "ring", "belt"}, name) then
 					for _, tag in ipairs(mod.modTags) do
 						if catalystTags[tag] then
@@ -251,8 +261,10 @@ for _, name in ipairs(itemTypes) do
 				end
 			else
 				if modLines > 0 or implicits or inMods then -- treat as post line e.g. mirrored, or unresolved text mod
+				if modLines > 0 or implicits or inMods then -- treat as post line e.g. mirrored, or unresolved text mod
 					table.insert(postModLines, line)
 				else
+					table.insert(preModLines, line)
 					table.insert(preModLines, line)
 				end
 			end
