@@ -17792,22 +17792,10 @@
                     "h": 138
                 },
                 "Art/2DArt/UIImages/InGame/AncestralTrial/PassiveTreeTattoos/HinekoraPassiveBG.png": {
-                    "x": [
-                        139,
-                        0
-                    ],
-                    "y": [
-                        0,
-                        414
-                    ],
-                    "w": [
-                        139,
-                        288
-                    ],
-                    "h": [
-                        138,
-                        290
-                    ]
+                    "x": 139,
+                    "y": 0,
+                    "w": 139,
+                    "h": 138
                 },
                 "Art/2DArt/UIImages/InGame/AncestralTrial/PassiveTreeTattoos/HinekoraTribePassiveBG.png": {
                     "x": 278,
