@@ -184,11 +184,16 @@ function M.icon(method,action,model)
 	if not currencyArt then
 		local file=assert(io.open("Assets/Crafting/currencies.json","rb"));currencyArt=assert(require("dkjson").decode(file:read("*a")));file:close();currencyNames={}
 		for _,entry in pairs(currencyArt.items) do currencyNames[entry.name]=entry.path end
+		-- The 3.30 client assigns Trickery the same inventory art as Delirium.
+		currencyNames["Essence of Trickery"]=currencyNames["Essence of Delirium"]
 	end
 	action=action or {};local id=currencyArt.methods[method];local name
 	if method=="socket_white_bench" then name="Orb of Scouring"
 	elseif method=="omen_jeweller" then name="Jeweller's Orb"
-	elseif method=="essence" and action.essenceId then local entry=data.essences[action.essenceId];name=entry and entry.name
+	elseif method=="essence" and action.essenceId then
+		local entry=data.essences[action.essenceId]
+		if model then for _,candidate in ipairs(model.essences or {}) do if candidate.id==action.essenceId then entry=candidate;break end end end
+		name=entry and entry.name
 	elseif method=="catalyst" and action.catalyst then local entry=({"Abrasive","Accelerating","Dextral","Fertile","Imbued","Intrinsic","Noxious","Prismatic","Sinistral","Tempering","Turbulent","Unstable"})[action.catalyst];name=entry and entry.." Catalyst"
 	elseif method=="fossil" and action.fossils then local prefix=({"Primitive","Potent","Powerful","Prime"})[#action.fossils];name=prefix and prefix.." Chaotic Resonator"
 	elseif method=="eldritch_implicit" and action.tier then local prefix=({"Lesser","Greater","Grand","Exceptional"})[action.tier];name=prefix and prefix.." Eldritch "..(action.side=="Eater" and "Ichor" or "Ember")

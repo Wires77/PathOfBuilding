@@ -96,6 +96,9 @@ end
 function M.describe(key,model)
 	local data=catalogue();local canonical=M.key(key,model);local entry=data.items[canonical]
 	if entry then return entry.name,entry.path,"Currency" end
+	if model then for _,essence in ipairs(model.essences or {}) do if essence.id==canonical then
+		return essence.name,require("Modules.CraftingWorkbench").icon("essence",{essenceId=canonical},model),"Currency"
+	end end end
 	local method,option=key:match("^([^:]+):(.+)$");method=method or key
 	local label=sim.labels[method] or key
 	if method=="bench" then local mod=_G.data.masterMods[tonumber(option)];if mod then label="Bench: "..table.concat(mod," / ") end

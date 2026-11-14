@@ -255,6 +255,16 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 		ui:click("settings");ui:text("paletteSearch",sim.labels.essence);assert(main.popups[1].controls.paletteUse:IsEnabled());ui:click("paletteUse");ui:click("apply")
 		assert(main.popups[1].controls.intro.label:find("Applied Essence",1,true),"An Essence did not apply after scouring the item")
 		frame("crafting-essence-options-applied");ui:click("close")
+		require("Classes.CraftingSimulatorControl").Open(build,{id="trickery-menu-ui",title="Essence of Trickery",slot="Belt",startingItem="Rarity: NORMAL\nLeather Belt\nItem Level: 86",goals={},steps={}})
+		ui:click("settings");ui:text("paletteSearch",sim.labels.essence);ui:click("paletteUse")
+		ui:choose("option","Essence of Trickery","label")
+		local hint={};for _,row in ipairs(main.popups[1].controls.actionHint.list) do hint[#hint+1]=row[1] end
+		assert(table.concat(hint," "):find("not modeled",1,true),"Trickery's calculation limitation is not visible")
+		frame("crafting-trickery-selected");ui:click("apply")
+		assert(main.popups[1].controls.intro.label:find("Essence of Trickery",1,true),"Trickery did not apply to the belt")
+		local found;for _,row in ipairs(main.popups[1].controls.itemMods.list) do if row.affixId=="PlayerIsDeliriousEssence1" then found=true end end
+		assert(found,"The belt card did not display Trickery's modifier")
+		frame("crafting-trickery-applied");ui:click("close")
 	end
 
 	do

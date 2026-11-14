@@ -16,10 +16,11 @@ function M.modDetails(model,id,entry)
 	if lightRadius330[id] then lines[#lines+1]="3.30 Light Radius range: "..lightRadius330[id].."%."..(entry and entry.legacyLightRadius and " Existing legacy value is retained until rerolled." or "") end
 	if model.legacyAbyss and model.legacyAbyss[id] then lines[#lines+1]="3.30: this older Abyss modifier no longer rolls naturally. Existing copies are retained." end
 	if model.unveiledJewels and model.unveiledJewels[id] then lines[#lines+1]="3.30 unveiled jewel modifier. Unveil offers and acquisition are not yet simulated." end
+	if model.trickery330 and model.trickery330[id] then lines[#lines+1]="Essence of Trickery: Delirium Fog effects are not modeled in build calculations." end
 	if sim.isClusterSpeedMod(model,id) then lines[#lines+1]="3.30: small-passive attack and cast speed modifiers share a family." end
 	if mod.tags and #mod.tags>0 then lines[#lines+1]="Tags: "..table.concat(mod.tags,", ") end
 	if entry then
-		lines[#lines+1]=entry.fractured and "Fractured: protected from ordinary rerolls." or entry.crafted and "Crafted modifier: uses a bench-crafted slot." or "Natural explicit modifier."
+		lines[#lines+1]=entry.fractured and "Fractured: protected from ordinary rerolls." or entry.crafted and "Crafted modifier: uses a bench-crafted slot." or model.special and model.special[id] and "Special explicit modifier." or "Natural explicit modifier."
 		for _,line in ipairs(sim.rolledLines(mod,entry.range)) do lines[#lines+1]="Current: "..line end
 	end
 	return lines

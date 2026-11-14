@@ -26,8 +26,9 @@ function M.prepare(model)
 end
 -- Native item parsing cannot resolve IDs added after its bundled data. Recover
 -- those explicit advanced-copy identities before checking the rendered lines.
-function M.restoreIdentities(model,raw)
-	if not next(model.unveiledJewels) or not raw:find("\nCrafted: true",1,true) then return end
+function M.restoreIdentities(model,raw,special)
+	special=special or model.unveiledJewels
+	if not next(special) or not raw:find("\nCrafted: true",1,true) then return end
 	local indices={Prefix=0,Suffix=0}
 	for line in (raw.."\n"):gmatch("([^\n]*)\n") do
 		local side,value=line:match("^%s*(Prefix):%s*(.-)%s*$")
@@ -36,8 +37,8 @@ function M.restoreIdentities(model,raw)
 			indices[side]=indices[side]+1
 			local fractured=value:match("^{fractured}")~=nil;value=value:gsub("^{fractured}","")
 			local range,id=value:match("^{range:([^}]+)}(.+)$");id=id or value
-			if model.unveiledJewels[id] then
-				assert(model.unveiledJewels[id].type==side,"Unveiled modifier is on the wrong affix side")
+			if special[id] then
+				assert(special[id].type==side,"Special modifier is on the wrong affix side")
 				local values={};if range then
 					assert(not range:find("^,") and not range:find(",$") and not range:find(",,",1,true),"Invalid unveiled modifier roll")
 					for number in range:gmatch("[^,]+") do local value=assert(tonumber(number),"Invalid unveiled modifier roll");assert(value==value and math.abs(value)<=100,"Invalid unveiled modifier roll");values[#values+1]=value end

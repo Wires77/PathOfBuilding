@@ -174,6 +174,13 @@ function M.model(raw)
 	for id,mod in pairs(item.affixes or { }) do model.byId[id]=mod end
 	require("Modules.CraftingUnveiledJewel330").prepare(model)
 	require("Modules.CraftingUnveiledJewel330").restoreIdentities(model,raw)
+	model.trickery330={}
+	if item.type=="Belt" then
+		local id="PlayerIsDeliriousEssence1"
+		local mod={type="Prefix",affix="Trickster's",level=85,group="PlayerIsDelirious",weightKey={},weightVal={},modTags={},statOrder={100001000},"You are affected by Delirium Fog"}
+		model.byId[id]=mod;model.trickery330[id]=mod
+		require("Modules.CraftingUnveiledJewel330").restoreIdentities(model,raw,model.trickery330)
+	end
 	for id,mod in pairs((item.type == "Jewel" or item.type == "Flask" or item.type == "Tincture") and item.affixes or data.itemMods.Explicit) do
 		if (mod.type == "Prefix" or mod.type == "Suffix") and mod.level <= item.itemLevel and not mod.affix:find("Elevated",1,true) then
 			local weight=item:GetModSpawnWeight(mod,extraTags)
@@ -205,6 +212,7 @@ function M.model(raw)
 		local modId=essence.mods[item.type]
 		if modId and model.byId[modId] then model.essences[#model.essences+1]={id=id,name=essence.name,modId=modId,tier=essence.tier,type=essence.type} end
 	end
+	if next(model.trickery330) then model.essences[#model.essences+1]={id="Metadata/Items/Currency/CurrencyEssenceUber1",name="Essence of Trickery",modId="PlayerIsDeliriousEssence1",tier=8,type=24} end
 	table.sort(model.essences,function(a,b) return a.id < b.id end)
 	local state={rarity=item.rarity,affixes={}}
 	for _,list in ipairs({item.prefixes,item.suffixes}) do for _,entry in ipairs(list) do

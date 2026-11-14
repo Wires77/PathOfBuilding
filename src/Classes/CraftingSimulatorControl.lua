@@ -141,6 +141,9 @@ function Panel.Open(build,project,layout)
 			local hint=workbench.hint(controls.method:GetSelValueByKey("val"),state,model)
 			local selected=controls.option and controls.option:GetSelValue()
 			local id=selected and selected.action and selected.action.modId
+			if selected and selected.action and selected.action.essenceId=="Metadata/Items/Currency/CurrencyEssenceUber1" then
+				hint="Delirium Fog effects are not modeled in build calculations."
+			end
 			if id and id:match("^bench:partial%-") or simulator.hasPartialLock(simulator.context(model,state),state) and workbench.available(controls.method:GetSelValueByKey("val"),state,model) then
 				local method=controls.method:GetSelValueByKey("val")
 				hint=(method=="harvest_reforge" or method=="harvest_augment") and "Experimental lock: some protection selections may leave no legal Harvest outcome."
@@ -226,7 +229,7 @@ function Panel.Open(build,project,layout)
 			ui.draft(build,"workingCraft",draft.id)
 			history[#history+1]=copyTable(state);if #history > 40 then table.remove(history,1) end
 			if index then craft.allflame=craft.allflame or copyTable(result.allflame.settings);craft.allflame.choiceIndex=index end
-			state=nextState;actions[#actions+1]=craft;updateOptions();refresh({"Applied "..(simulator.labels[craft.method] or "craft")..". Select another currency or undo."})
+			state=nextState;actions[#actions+1]=craft;updateOptions();refresh({"Applied "..(craft.essenceId=="Metadata/Items/Currency/CurrencyEssenceUber1" and workbench.actionLabel(craft,model) or simulator.labels[craft.method] or "craft")..". Select another currency or undo."})
 		end
 		if result.choices and #result.choices > 1 then
 			local popup={};local choices={}

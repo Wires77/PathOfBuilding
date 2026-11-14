@@ -160,6 +160,7 @@ function A.extend(M,api)
 		end
 		model.special={}; model.veiled={}; model.fossils={}
 		for id in pairs(model.unveiledJewels or {}) do model.special[id]=true end
+		for id in pairs(model.trickery330 or {}) do model.special[id]=true end
 		for i=#model.mods,1,-1 do local meta=A.data().mods[model.mods[i].id];if meta and meta.is_essence_only then table.remove(model.mods,i) end end
 		for _,list in ipairs({data.itemMods.Item,data.veiledMods,data.beastCraft}) do for id,mod in pairs(list) do
 			if not model.byId[id] then model.byId[id]=mod end
