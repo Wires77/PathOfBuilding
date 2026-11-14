@@ -812,6 +812,21 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 	ui:click("manage");frame("filter-empty-profile-tools");local emptyToolIds={};for _,row in ipairs(main.popups[1].controls.results.list) do if row.entry then emptyToolIds[row.entry.id]=true end end;local emptyToolCount=0;for _ in pairs(emptyToolIds) do emptyToolCount=emptyToolCount+1 end;assert(emptyToolCount==2 and emptyToolIds.new and emptyToolIds.import,"Empty filter tools offered actions without a profile");ui:click("close")
 	ui:click("create2");ui:text("title","Covens pickup plan");frame("filter-profile")
 	do
+		local profile=build.planningWorkspace.cache.filters.layout.snapshot().data.profiles[1]
+		profile.rules={{id="order-a",title="Match A",text='Show\n BaseType == "Iron Hat"',enabled=true},
+			{id="order-hidden",title="Other rule",text='Show\n BaseType == "Leather Belt"',enabled=true},
+			{id="order-c",title="Match C",text='Show\n BaseType == "Iron Hat"',enabled=true}}
+		ui:click("viewCustomize");ui:choose("source","My rules");ui:text("search","Match");local list=build.planningWorkspace.controls.rules
+		assert(#list.list==2,"Filtered rule fixture did not show two rules")
+		local x,y=list:GetPos();ui:dragAt(x+30,y+2+76+20,0,-76,"LEFTBUTTON")
+		local function ids() local result={};for _,rule in ipairs(profile.rules) do result[#result+1]=rule.id end;return table.concat(result,",") end
+		assert(ids()=="order-c,order-a,order-hidden","Dragging did not move the rule before the visible target: "..ids())
+		frame("filter-rule-dragged");assert(build.planningWorkspace.controls.down:IsEnabled(),"The selected rule cannot move down")
+		ui:click("down");assert(ids()=="order-a,order-c,order-hidden","Arrow did not move after the next visible rule: "..ids())
+		assert(not build.planningWorkspace.controls.down:IsEnabled(),"The last visible rule can move down")
+		frame("filter-rule-filtered-order");profile.rules={};ui:click("viewOverview")
+	end
+	do
 		local rule={id="rare-example",title="Rare modifiers",text='Show\n Rarity Rare\n HasExplicitMod >=2 "Haast" "Ephij"'}
 		local example=require("Modules.LootFilterLibrary").sample(rule);assert(example.BaseType=="Iron Hat" and example.Identified and #example.HasExplicitMod==2,"Generic rare example did not use equipment and matching modifiers")
 		require("Classes.LootFilterControl").EditRule(rule,function() end);assert(main.popups[1].controls.textHex.buf=="FFFF77FF","Rare example did not show its default text colour");frame("filter-rare-example");ui:click("cancel")

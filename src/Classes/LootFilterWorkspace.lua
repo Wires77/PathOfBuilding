@@ -274,18 +274,48 @@ function M.Open(build,source,layout,controller)
 			if not selectedEntry then selectedEntry=entries[1];selected=selectedEntry and selectedEntry.rule.id end
 			if #rows==0 then rows=ui.rows({scope=="My rules" and "No personal pickups here yet." or "No matching base rules.","Try another category or search."},listW-28,14) end
 			c.rules.list=rows;updateSelection(selectedEntry)
-			c.ruleCount.label="^7"..#entries.." matching rules"
+			c.ruleCount.label="^7"..#entries.." matching rules"..(scope=="My rules" and #entries>1 and " | drag to reorder" or "")
 		end
 		local draw=c.rules.Draw
 		function c.rules:Draw(viewport)
 			draw(self,viewport);local x,y=self:GetPos();local width,height=self:GetSize();SetViewport(x+2,y+2,width-20,height-4);local top=-self.controls.scrollBar.offset
 			for _,row in ipairs(self.list) do if row.entry and top+row.height>0 and top<height then local entry=row.entry
-				visual.box(2,top+2,width-24,70,selected==entry.rule.id and "^x293D50" or "^x17232E");visual.text(12,top+8,14,entry.rule.title,selected==entry.rule.id and "^xF0D49B" or "^xDCE5EC",width-44)
+				visual.box(2,top+2,width-24,70,selected==entry.rule.id and "^x293D50" or "^x17232E")
+				if not entry.base then visual.text(8,top+8,14,"::","^x9DB0C1",14) end
+				visual.text(entry.base and 12 or 24,top+8,14,entry.rule.title,selected==entry.rule.id and "^xF0D49B" or "^xDCE5EC",width-(entry.base and 44 or 56))
 				local styles=entry.block.styles;visual.chip(8,top+24,width-34,32,entry.sample,{action=entry.block.action,styles={SetTextColor=styles.SetTextColor,SetBorderColor=styles.SetBorderColor,SetBackgroundColor=styles.SetBackgroundColor,SetFontSize={"24"}}})
 				visual.text(12,top+58,12,(entry.rule.enabled==false and "DISABLED / " or "")..entry.category.." / "..entry.tier,"^x9DB0C1",width-44)
+				if self.dragRule and self.dragRule~=entry.rule.id and self.hoveredLine and self.hoveredLine.line==row then
+					local _,mouseY=GetCursorPos();local after=mouseY>=self.hoveredLine.y+row.height/2
+					visual.box(4,top+(after and row.height-3 or 0),width-28,3,"^xF0D49B")
+				end
 			end;top=top+row.height end;SetViewport()
 		end
 		ui.selectable(c.rules,function(row) return row.entry and row.entry.rule.id end,function(row) updateSelection(row.entry) end,edit)
+		local function reorder(source,target,after)
+			if require("Modules.LootFilterRuleOrder").move(profile.rules,source,target,after) then selected=source;draft();reopen();return true end
+		end
+		local down,up=c.rules.OnKeyDown,c.rules.OnKeyUp
+		function c.rules:OnKeyDown(key,...)
+			local hit=self.hoveredLine;local originalClick=self.onClick
+			if key=="LEFTBUTTON" and scope=="My rules" then self.onClick=function(row) if row then self.planningSelect(row.line,false) end end end
+			local result=down(self,key,...);self.onClick=originalClick
+			if key=="LEFTBUTTON" and scope=="My rules" and hit and hit.line.entry and not hit.line.entry.base then
+				local x,y=GetCursorPos();self.dragRule=hit.line.entry.rule.id;self.dragX=x;self.dragY=y
+			end
+			return result
+		end
+		function c.rules:OnKeyUp(key,...)
+			if key=="LEFTBUTTON" and self.dragRule then
+				local source=self.dragRule;self.dragRule=nil;local x,y=GetCursorPos();local hit=self.hoveredLine
+				local moved=math.abs(x-self.dragX)>4 or math.abs(y-self.dragY)>4
+				if self:IsMouseOver() and hit and hit.line.entry and not hit.line.entry.base then
+					if moved then if reorder(source,hit.line.entry.rule.id,y>=hit.y+hit.line.height/2) then return self end
+					elseif hit.line.entry.rule.id==source then edit();return self end
+				end
+			end
+			return up(self,key,...)
+		end
 		c.search.changeFunc=function(value) query=value;refreshList() end
 		local bw=math.floor((listW-24)/4)
 		button(c,"add",listX,h-94,bw,scope=="Policies" and "Set policy" or "+ Rule",function()
@@ -300,10 +330,17 @@ function M.Open(build,source,layout,controller)
 		c.toggle.label=function() return selectedEntry and (selectedEntry.base and (selectedEntry.block.action=="Show" and "Hide" or "Show") or selectedEntry.rule.enabled==false and "Enable" or "Disable") or "On / off" end
 		button(c,"remove",listX+(bw+8)*3,h-94,bw,"Delete",function() if selectedEntry and not selectedEntry.base then for i,r in ipairs(profile.rules) do if r.id==selected then table.remove(profile.rules,i);break end end;selected=nil;draft();reopen() end end)
 		c.remove.enabled=function() return selectedEntry~=nil and not selectedEntry.base end
-		local function move(delta) if selectedEntry and not selectedEntry.base then for i,rule in ipairs(profile.rules) do if rule.id==selected then local next=i+delta;if next>=1 and next<=#profile.rules then profile.rules[i],profile.rules[next]=profile.rules[next],profile.rules[i];draft();reopen() end;break end end end end
+		local function visibleNeighbour(delta)
+			if not selectedEntry or selectedEntry.base then return end
+			for i,entry in ipairs(entries) do if entry.rule.id==selected then return entries[i+delta] end end
+		end
+		local function move(delta) local target=visibleNeighbour(delta);if target and not target.base then reorder(selected,target.rule.id,delta>0) end end
 		button(c,"up",listX+listW-62,148,26,"^",function() move(-1) end);c.up.height=20
 		button(c,"down",listX+listW-30,148,26,"v",function() move(1) end);c.down.height=20
-		c.up.enabled=function() return selectedEntry~=nil and not selectedEntry.base end;c.down.enabled=c.up.enabled
+		c.up.enabled=function() return visibleNeighbour(-1)~=nil end;c.down.enabled=function() return visibleNeighbour(1)~=nil end
+		c.up.tooltipText="Move before the previous visible rule. Hidden rules between them will also be crossed."
+		c.down.tooltipText="Move after the next visible rule. Hidden rules between them will also be crossed."
+		c.rules.tooltipText="Drag a personal rule above or below another, or use the arrows. Rule order determines priority."
 		c.preview=new("Control"):Control(ui.anchor,{detailX,120,detailW,126});backgrounds.preview=true
 		function c.preview:Draw() local x,y=self:GetPos();visual.floor(x,y,detailW,126);visual.chip(x+8,y+8,detailW-16,112,item,result) end
 		c.detail=new("TextListControl"):TextListControl(ui.anchor,{detailX,260,detailW,h-382},nil,{})
