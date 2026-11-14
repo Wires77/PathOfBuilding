@@ -1,7 +1,12 @@
 -- Native Atlas plans use pinned GGG data, independently of character passives.
 -- cspell:ignore jsontype
 local json = require("dkjson")
-local M = {versions={"3.27.0","3.29.1","3.29.3","3.30.0-preview"},cache={}}
+local M = {versions={"3.27.0","3.29.1","3.29.3","3.30.0-preview","3.30.0-preview-ruthless"},cache={}}
+function M.defaultVersion(treeVersion)
+	treeVersion=treeVersion or ""
+	if treeVersion:match("3_30") and treeVersion:find("ruthless",1,true) then return "3.30.0-preview-ruthless" end
+	return treeVersion:match("3_30") and "3.30.0-preview" or treeVersion:match("3_27") and "3.27.0" or "3.29.3"
+end
 local function integer(value,low,high,label)
 	assert(type(value) == "number" and value == math.floor(value) and value >= low and value <= high,"Invalid "..label)
 	return value
@@ -248,7 +253,7 @@ function M.report(plan)
 	local lines={}
 	for stat,count in pairs(stats) do lines[#lines+1]={text=stat,count=count} end
 	table.sort(lines,function(a,b) return a.text < b.text end); table.sort(notables); table.sort(keystones)
-	return {version=plan.version,mode="Standard",preview=tree.preview,compatibleModes=tree.compatibleModes,used=#plan.nodes,budget=plan.budget,bonus=bonus,remaining=plan.budget+bonus-#plan.nodes,budgetReachable=reachable,budgetWarning=budgetWarning,pointsBeforeGrant=pointsBeforeGrant,
+	return {version=plan.version,mode=tree.mode=="ruthless" and "Ruthless" or "Standard",preview=tree.preview,compatibleModes=tree.compatibleModes,used=#plan.nodes,budget=plan.budget,bonus=bonus,remaining=plan.budget+bonus-#plan.nodes,budgetReachable=reachable,budgetWarning=budgetWarning,pointsBeforeGrant=pointsBeforeGrant,
 		counts=counts,notables=notables,keystones=keystones,stats=lines,source=tree.source,sourceCommit=tree.commit,
 		limitations={"Atlas plans do not modify character DPS or EHP.","Stat lines are grouped verbatim, not combined into effective map odds. Keystone interactions are not simulated.","Budget is supplied progression, not imported account completion. Small optimized routes can be exact; larger routes use a heuristic."}}
 end
@@ -264,6 +269,7 @@ function M.import(raw,version,id,title,budget)
 		local plan=M.validate(decoded.atlasPlan); plan.id=id or plan.id; plan.title=title or plan.title
 		return M.validate(plan)
 	end
+	assert(M.tree(version).mode~="ruthless","Official Ruthless Atlas links are not yet verified; import a saved plan JSON instead.")
 	local host,path=raw:match("^https://([^/]+)/(.+)$")
 	assert(host=="www.pathofexile.com" or host=="pathofexile.com","Paste plan JSON or an official pathofexile.com Atlas link. Other planners must export an official link first.")
 	path=path:match("^[^?#]+") or ""
@@ -278,6 +284,7 @@ function M.import(raw,version,id,title,budget)
 end
 function M.url(plan)
 	plan=M.validate(plan)
+	assert(M.tree(plan.version).mode~="ruthless","Official Ruthless Atlas links are not yet verified; use Copy plan instead.")
 	local ids=copyTable(plan.nodes); ids[#ids+1]=M.tree(plan.version).start; table.sort(ids)
 	local bytes={0,0,0,6,0,math.floor(#ids/256),#ids%256}
 	for _,id in ipairs(ids) do bytes[#bytes+1]=math.floor(id/256); bytes[#bytes+1]=id%256 end

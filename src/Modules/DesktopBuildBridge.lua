@@ -555,7 +555,9 @@ function M.poll(build, force)
 			else
 				assert(request.optimize==nil or type(request.optimize)=="boolean","Invalid Atlas optimization setting")
 				local plan,added,routing=(request.optimize and planner.connectOptimized or planner.connect)(request.plan,request.targets,request.avoid)
-				result={plan=plan,added=added,routing=routing,report=planner.report(plan),officialUrl=planner.url(plan)}
+				result={plan=plan,added=added,routing=routing,report=planner.report(plan)}
+				if planner.tree(plan.version).mode=="ruthless" then result.officialUrlWarning="Official Ruthless Atlas link encoding is not verified; use the versioned plan JSON."
+				else result.officialUrl=planner.url(plan) end
 			end
 			M.status={id=request.id,status="atlas",atlas=result}; M.publishState(); return
 		end

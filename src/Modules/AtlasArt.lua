@@ -1,6 +1,7 @@
 -- Official Atlas sprite sheets, bundled for offline planning.
 local M={}
 function M.load(version)
+	if version=="3.30.0-preview-ruthless" then version="3.30.0-preview" end
 	local file=assert(io.open("Assets/Atlas/"..version.."/manifest.json","r"))
 	local data=assert(require("dkjson").decode(file:read("*a")));file:close()
 	local handles={}

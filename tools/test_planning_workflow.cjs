@@ -319,6 +319,12 @@ async function main(){
   assert.ok(secondCorruption.nativeCrafting.state.destroyed || secondCorruption.nativeCrafting.state.twiceCorrupted);
   if(!secondCorruption.nativeCrafting.state.destroyed) assert.match(secondCorruption.nativeCrafting.itemText,/Twice Corrupted/);
   const starterAtlas={id:'starter-atlas',title:'Starter Atlas',version:'3.29.1',budget:138,nodes:[],progression:{stage:'starter'}};
+  const ruthlessVersion='3.30.0-preview-ruthless';
+  const ruthlessSearch=await queued('search_atlas_nodes',{baseRevision:context.revision,version:ruthlessVersion,query:'Tier 1-15 Maps found have 3% chance',limit:10},'atlas');
+  assert.ok(ruthlessSearch.atlas.matches.some(node=>node.stats.some(stat=>stat.includes('Tier 1-15 Maps found have 3% chance'))));
+  const ruthlessRoute=await queued('plan_atlas_tree',{baseRevision:context.revision,plan:{id:'ruthless',title:'Ruthless',version:ruthlessVersion,budget:150,nodes:[]},targets:[57123],optimize:true},'atlas');
+  assert.equal(ruthlessRoute.atlas.plan.version,ruthlessVersion);assert.ok(ruthlessRoute.atlas.plan.nodes.includes(57123));
+  assert.equal(ruthlessRoute.atlas.officialUrl,undefined);assert.match(ruthlessRoute.atlas.officialUrlWarning,/not verified/);
   const atlasSearch=await queued('search_atlas_nodes',{baseRevision:context.revision,version:'3.29.1',query:'Essence',limit:10},'atlas');
   const atlasTargets=atlasSearch.atlas.matches.slice(0,3).map(node=>node.id);assert.equal(atlasTargets.length,3);
   const atlasRoute=await queued('plan_atlas_tree',{baseRevision:context.revision,plan:starterAtlas,targets:atlasTargets,optimize:true},'atlas');

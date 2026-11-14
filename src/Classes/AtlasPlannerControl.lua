@@ -158,7 +158,7 @@ function Canvas:OnFocusLost() self.drag=nil end
 
 function Panel.Open(build,source,layout)
 	local store=build.savers.AtlasPlans
-	local version=(build.spec.treeVersion or ""):match("3_30") and "3.30.0-preview" or (build.spec.treeVersion or ""):match("3_27") and "3.27.0" or "3.29.3"
+	local version=atlas.defaultVersion(build.spec.treeVersion)
 	local draft=copyTable(source or store.plans[1] or {id="atlas-"..require("sha1")(tostring({})..os.time()):sub(1,12),title="New Atlas plan",version=version,budget=atlas.tree(version).maxPoints,nodes={},notes=""})
 	local width=layout and layout.width or math.min(1180,main.screenW-40); local height=layout and layout.height or math.min(820,main.screenH-50)
 	local inspector=math.max(260,math.min(width-600,layout and (layout.inspectorWidth or layout.restore and layout.restore.inspectorWidth) or 260))
@@ -380,6 +380,8 @@ function Panel.Open(build,source,layout)
 	controls.copy=button(16,height-104,120,"Copy plan",function() Copy(atlas.export(current())) end)
 	controls.import=button(148,height-104,120,"Paste plan",function() change(atlas.import(Paste(),draft.version,draft.id,controls.title.buf,tonumber(controls.budget.buf))); avoided={}; controls.avoid.label="Avoid selected"; controls.budget:SetText(tostring(draft.budget)); controls.version:SelByValue(draft.version); controls.canvas.tree=atlas.tree(draft.version);controls.canvas.art=require("Modules.AtlasArt").load(draft.version); controls.canvas:Fit() end)
 	controls.url=button(280,height-104,120,"Official link",function() Copy(atlas.url(current())); main:OpenMessagePopup("Atlas link copied","Official URLs do not carry patch versions. Use Copy plan to preserve the exact version.") end)
+	controls.url.enabled=function() return atlas.tree(draft.version).mode~="ruthless" end
+	controls.url.tooltipFunc=function(tooltip) tooltip:AddLine(14,atlas.tree(draft.version).mode=="ruthless" and "Ruthless official-link encoding is not verified. Use Copy plan for a versioned share." or "Copy an official Atlas link. Copy plan also preserves the exact version.") end
 	controls.keep=button(16,height-42,160,"Keep plan",function() store:Upsert(current());if layout then controls.status.label="^7Plan kept. Save the build to persist it." else main:ClosePopup() end end)
 	controls.library=button(188,height-42,120,"Saved plans",function() Panel.Library(build,layout) end)
 	controls.new=button(320,height-42,120,"New plan",function() if not layout then main:ClosePopup() end;Panel.Open(build,{id="atlas-"..require("sha1")(tostring({})..os.time()):sub(1,12),title="New Atlas plan",version=draft.version,budget=atlas.tree(draft.version).maxPoints,nodes={},notes=""},layout) end)
@@ -387,6 +389,8 @@ function Panel.Open(build,source,layout)
 	controls.close=button(width-132,height-42,116,"Close",function() main:ClosePopup() end)
 	controls.page=new("DropDownControl"):DropDownControl(ui.anchor,{side,64,260,24},{"Tree","Notes & sharing"})
 	ui.label(controls,"notesLabel",16,88,"Farming goals, maps, supplies and strategy notes")
+	ui.label(controls,"ruthlessShareNote",16,height-130,"Ruthless: use Copy plan for versioned sharing.",14)
+	controls.ruthlessShareNote.shown=function() return controls.page:GetSelValue()=="Notes & sharing" and atlas.tree(draft.version).mode=="ruthless" end
 	for _,key in ipairs({"canvas","strategySummary","search","find","results","mechanic","matchCount","details","allocate","remove","undo","redo","fit","help","avoid","clearAvoid","stats","browse","routes","tools"}) do
 		controls[key].shown=function() return controls.page:GetSelValue()=="Tree" end
 	end

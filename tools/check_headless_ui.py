@@ -77,7 +77,7 @@ def main():
             assert all(b"Covens pickup plan" in z.read(name) for name in z.namelist()), "ZIP lost the personal filter"
         archive.unlink()
     paths = sorted(frames.glob("*.json"))
-    assert len(paths) == 1140, f"Expected 1140 UI frames, found {len(paths)}"
+    assert len(paths) == 1146, f"Expected 1146 UI frames, found {len(paths)}"
     for width in (960, 1024, 1280):
         frame = json.loads((frames / f"{width}-filter-background-default-alpha.json").read_text())
         expected = (10 / 255, 20 / 255, 30 / 255, 240 / 255)

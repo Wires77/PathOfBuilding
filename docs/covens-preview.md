@@ -12,7 +12,7 @@ The tree warning and AI build analysis identify builds still using the earlier p
 
 Choose **3.30.0-preview** in Atlas. New Atlas plans on a preview character select that version automatically. The official base point limit is **150**, with granted points accounted for separately. Search, routing, strategy stages, native saving, bundles and MCP proposals preserve the exact preview version.
 
-GGG's Standard and Covens Atlas exports have identical graph data at this pinned revision; the generator checks this and records both source hashes. Ruthless Atlas data is not bundled. Stable **3.29.3** is also available, while 3.29.1 and 3.27.0 remain available for existing plans.
+GGG's Standard and Covens Atlas exports have identical graph data within each mode at this pinned revision. The separate Ruthless graph is bundled and defaults for 3.30 Ruthless characters; its node modifiers differ from Standard. The generator verifies the matching league graphs and shared artwork. Stable **3.29.3** is also available, while 3.29.1 and 3.27.0 remain available for existing plans.
 
 ## Sources
 

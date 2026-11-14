@@ -63,6 +63,12 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 	ui:frame();ui:click("nav_ai");frame("ai-applied");ui:click("restore")
 	assert(main.modes.BUILD==original,"Undo did not restore the original scratch build")
 	ui:click("nav_atlas");frame("atlas-new-default");assert(build.planningWorkspace.controls.canvas.tree.version=="3.30.0-preview","New Atlas plan did not default to 3.30")
+	ui:choose("version","3.30.0-preview-ruthless");ui:click("confirm")
+	assert(build.planningWorkspace.controls.canvas.tree.mode=="ruthless","Ruthless Atlas did not load")
+	assert(build.planningWorkspace.controls.canvas.tree.nodes[57123].stats[1]:find("3%% chance"),"Ruthless Atlas displayed a Standard modifier")
+	frame("atlas-ruthless-tree");ui:choose("page","Notes & sharing");assert(not build.planningWorkspace.controls.url:IsEnabled(),"Unverified Ruthless official links are enabled")
+	ui:click("copy");assert(json.decode(ui.clipboard).atlasPlan.version=="3.30.0-preview-ruthless","Ruthless plan export lost its mode")
+	frame("atlas-ruthless-sharing");ui:choose("page","Tree")
 	ui:choose("version","3.29.3");ui:click("confirm");frame("atlas-start");assert(not build.controls.statBox:IsShown(),"Build sidebar should be hidden while planning")
 	local workspace=build.planningWorkspace
 	build.buildFlag=true;ui:frame();ui:click("nav_tools");frame("planning-tools");ui:click("choose");frame("performance-diagnostics");ui:click("copy");assert(ui.clipboard:find("ms",1,true));ui:click("refresh");ui:click("close")

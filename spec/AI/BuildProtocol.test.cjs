@@ -412,6 +412,15 @@ test('accepts the pinned 150 point Atlas preview without inventing future versio
   assert.throws(()=>f.call('propose_atlas_plan',{baseRevision:f.state.revision,plan:{...plan,version:'3.31.0'}}),/arguments/);
 });
 
+test('queues searches and plans for the pinned Ruthless Atlas', t => {
+  const f=fixture(t);const base={baseRevision:f.state.revision};const version='3.30.0-preview-ruthless';
+  f.call('search_atlas_nodes',{...base,version,query:'Searing Exarch',limit:10});
+  assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir,'AI-build-request.json'))).version,version);
+  fs.unlinkSync(path.join(f.dir,'AI-build-request.json'));
+  f.call('plan_atlas_tree',{...base,plan:{id:'ruthless',title:'Ruthless',version,budget:150,nodes:[]},targets:[57123]});
+  assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir,'AI-build-request.json'))).plan.version,version);
+});
+
 
 test('queues offline appearance, colour goals and optimized Atlas routing', t => {
   const f=fixture(t);const base={baseRevision:f.state.revision};
