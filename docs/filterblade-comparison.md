@@ -1,6 +1,6 @@
 # FilterBlade feature review
 
-Reviewed the live [PoE 1 FilterBlade site](https://www.filterblade.xyz/?game=Poe1) on November 12, 2026: Start, Overview, Customize (including currency tier lists), Simulate, Themes, Advanced, campaign auto-adjust and the anonymous export flow. Login, saved cloud content and paid background services were not exercised. The site's current preset was still labelled 3.29 Allflame; our 3.30 additions remain sourced from GGG.
+Reviewed the live [PoE 1 FilterBlade site](https://www.filterblade.xyz/?game=Poe1) on November 12, 2026: Start, Overview, Customize (including currency tier lists), Simulate, Themes, Advanced, campaign auto-adjust and the anonymous export flow. Login, saved cloud content and paid background services were not exercised. That review preceded the fork's update to NeverSink 8.21.0a for 3.30.
 
 This is a comparison, not a claim of FilterBlade parity. Its website, customizer definitions, economy service and cloud systems are separate from the MIT-licensed NeverSink filter files.
 
@@ -25,7 +25,7 @@ This is a comparison, not a claim of FilterBlade parity. Its website, customizer
 | Stacked currency tiering | Existing stack conditions are preserved and editable | Uniform/adjusted stacked-tier controls |
 | Economy-based tiers | Pinned NeverSink snapshot | Live pricing, outlier handling and recalculation |
 | Global search | Searches names and raw condition/action text | Cross-page command palette |
-| Loot generator | Deterministic example scenes and build-target samples | Representative drop distributions and encounter presets |
+| Loot generator | Deterministic example scenes, including cards and essences, and build-target samples | Representative drop distributions and encounter presets |
 | Hidden-drop display | Simulator toggle and searchable scene review with shown, minimal, hidden and uncertain counts | Counts describe examples, not drop rates |
 | Click a simulated item | Explains results and opens matched blocks for editing | More unknown-property guidance |
 | Item configuration | Editable properties and native game-clipboard import | Hidden identities are never inferred |
@@ -33,11 +33,11 @@ This is a comparison, not a claim of FilterBlade parity. Its website, customizer
 | Generator level settings | Shared area/item-level controls and a tiered-gear comparison scene | More encounter-specific samples |
 | Expensive-drop generation | Currency scene and exact custom samples | A separate expensive-item mode based on verified tiers |
 | Preview background | Stone, dark and light scenes | Additional environments |
-| Individual colours | Swatches, RGBA input and live preview | Full colour wheel and saved palettes |
+| Individual colours | Colour wheel, brightness and opacity controls, swatches, exact RGBA input and live preview | More built-in palette presets |
 | Font size | Live size slider | Additional typography presets |
 | Alert sound selection | All 16 numbered IDs plus silence; custom references preserved | Exact game audio preview and custom sound pack management |
 | Minimap icons | All twelve shapes, colour/size selection and native geometry previews | Exact game-texture rendering |
-| Themes | Generated-target palettes, personal restyling, whole-filter decorators and named appearance snapshots | Colour wheel |
+| Themes | Generated-target palettes, personal restyling, whole-filter decorators and named appearance snapshots | More built-in themes |
 | Global one-click edits | Reversible whole-filter and category font/colour, alert identity/volume, icon and beam controls | More saved appearance presets |
 | Shared modules | Portable named snapshots, cross-profile copy and explicit updates | Public discovery and module dependency graphs |
 | Review changes | Rule/item review, file-level compiled/base comparisons, provable conflicts and undo/redo | Richer predicate overlap analysis |

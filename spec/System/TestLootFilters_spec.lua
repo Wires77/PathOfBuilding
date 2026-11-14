@@ -239,13 +239,13 @@ describe("Build-owned loot filters",function()
 		local commentOnly='Show\n BaseType Chaos # "Orb of Binding"\nHide'
 		local preserved,notes=filters.migrate(commentOnly);assert.equal(commentOnly,preserved);assert.is_nil(next(notes))
 	end)
-	it("compiles all seven pinned bases with 3.30 item protection and provenance",function()
+	it("compiles all seven 3.30-native bases with provenance",function()
 		for strictness=0,6 do
 			local profile=filters.profile("test","Test");profile.strictness=strictness
 			local raw,report=filters.compile(profile)
 			assert.is_true(#raw>10000);assert.equal(filters.source().commit,report.baseCommit)
 			assert.is_truthy(raw:find("# Copyright (c) 2026 NeverSink",1,true));assert.is_truthy(raw:find("# Permission is hereby granted",1,true))
-			assert.equal("Show",filters.simulate(profile,{BaseType="Frayed Thread"}).action)
+			assert.is_truthy(raw:find('"Frayed Thread"',1,true))
 			for _,diagnostic in ipairs(report.diagnostics) do assert.is_nil(diagnostic.error,diagnostic.error) end
 		end
 	end)

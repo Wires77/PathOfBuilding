@@ -148,6 +148,7 @@ function M.Open(build,source,layout,controller)
 	local function sceneControl(key,x,y,width,height,drops,selectable,caption)
 		local canvas=new("Control"):Control(ui.anchor,{x,y,width,height});c[key]=canvas;backgrounds[key]=true
 		local columns=width>700 and 4 or width>460 and 3 or 2;local reserve=selectable and 98 or 46;local rows=math.max(2,math.floor((height-reserve)/70));local capacity=columns*rows;local cells={};local visible=0;local eligible={}
+		if selectable and sceneKind=="Essences" then columns=math.min(columns,3);capacity=columns*rows end
 		local function evaluate(drop) return parsed and parser.simulate(parsed,drop) or {action="Unknown",status="unknown",styles={}} end
 		for _,drop in ipairs(drops) do local evaluated=not showHidden and evaluate(drop) or nil;if showHidden or evaluated.action~="Hide" then eligible[#eligible+1]={item=drop,result=evaluated} end end
 		local pages=math.max(1,math.ceil(#eligible/capacity));if selectable then scenePage=math.max(1,math.min(scenePage,pages)) end
@@ -312,9 +313,9 @@ function M.Open(build,source,layout,controller)
 	elseif page=="Simulate" then
 		local left=208;local groundX=240;local groundW=w-256
 		ui.label(c,"sceneTitle",16,124,"Loot simulator",20)
-		local kinds={"Mixed drops","Build targets","Currency","Tiered gear","Covens & Threads"};local savedSets=profile.sampleSets or {};if #savedSets>0 then kinds[#kinds+1]="Saved examples" elseif sceneKind=="Saved examples" then sceneKind="Mixed drops" end
+		local kinds={"Mixed drops","Build targets","Currency","Tiered gear","Covens & Threads","Divination cards","Essences"};local savedSets=profile.sampleSets or {};if #savedSets>0 then kinds[#kinds+1]="Saved examples" elseif sceneKind=="Saved examples" then sceneKind="Mixed drops" end
 		c.sceneKind=new("DropDownControl"):DropDownControl(ui.anchor,{16,162,left,26},kinds,function(_,value)
-			sceneKind=value;scenePage=1;if value=="Saved examples" then local chosen=savedSets[1];for _,entry in ipairs(savedSets) do if entry.id==sampleSetId then chosen=entry end end;item=copyTable(chosen.samples[1]) elseif value=="Tiered gear" then item=library.scene(profile,build,value,seed,settings.areaLevel,settings.itemLevel)[1] end;reopen()
+			sceneKind=value;scenePage=1;if value=="Saved examples" then local chosen=savedSets[1];for _,entry in ipairs(savedSets) do if entry.id==sampleSetId then chosen=entry end end;item=copyTable(chosen.samples[1]) elseif value=="Tiered gear" or value=="Divination cards" or value=="Essences" then item=library.scene(profile,build,value,seed,settings.areaLevel,settings.itemLevel)[1] end;reopen()
 		end);c.sceneKind:SelByValue(sceneKind)
 		button(c,"regenerate",16,202,100,"Regenerate",function() seed=seed+1;scenePage=1;if sceneKind=="Build targets" then transient.filterSceneTargets=nil end;reopen() end)
 		c.regenerate.enabled=sceneKind~="Saved examples" and sceneKind~="Tiered gear";c.regenerate.tooltipText="Reorder generated examples. Saved and tier-comparison examples keep their exact properties; examples are not drop-rate estimates."
@@ -353,6 +354,10 @@ function M.Open(build,source,layout,controller)
 			if not present then table.insert(scene,1,item);extraTest=true end
 		else local targets=sceneKind=="Build targets" and targetPreview() or nil
 			scene=library.scene(profile,build,sceneKind,seed,settings.areaLevel,settings.itemLevel,targets and (targets.rules or {}));if sceneKind~="Tiered gear" then table.insert(scene,1,item) end end
+		if sceneKind=="Divination cards" or sceneKind=="Essences" then
+			local encode=require("Modules.PlanningData").encode;local selected=encode(item)
+			for i=#scene,2,-1 do if encode(scene[i])==selected then table.remove(scene,1);break end end
+		end
 		local targets=sceneKind=="Build targets" and transient.filterSceneTargets or nil
 		local caption=sceneKind=="Tiered gear" and "TIER COMPARISON" or savedSet and (extraTest and "SAVED SET + CURRENT TEST" or "SAVED EXAMPLES") or targets and (targets.error and "TARGETS UNAVAILABLE" or not targets.rules and "CHECKING BUILD TARGETS..." or #targets.warnings>0 and "SOME TARGETS NEED REVIEW" or "BUILD TARGETS")
 		sceneControl("preview",groundX,savedSet and 168 or 120,groundW,h-(savedSet and 230 or 182),scene,true,caption)

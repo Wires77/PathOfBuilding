@@ -4,6 +4,21 @@ describe("Visual filter catalogue",function()
 	local library=require("Modules.LootFilterLibrary")
 	before_each(function() newBuild();main.popups={} end)
 	after_each(function() main.popups={} end)
+	it("offers reproducible card and essence examples for testing filter rules",function()
+		local profile=filters.profile("test","Test")
+		for _,case in ipairs({{kind="Divination cards",class="Divination Cards",base="The Doctor",count=12},
+			{kind="Essences",class="Stackable Currency",base="Essence of Horror",count=11}}) do
+			local scene=library.scene(profile,build,case.kind,0,76,81);assert.equal(case.count,#scene)
+			local rule=parser.parse('Show\n Class == "'..case.class..'"\n BaseType == "'..case.base..'"\nHide')
+			local found=0;for _,item in ipairs(scene) do
+				assert.equal(case.class,item.Class);assert.equal(76,item.AreaLevel);assert.equal(81,item.ItemLevel)
+				if parser.simulate(rule,item).action=="Show" then assert.equal(case.base,item.BaseType);found=found+1 end
+			end
+			assert.equal(1,found)
+			local rotated=library.scene(profile,build,case.kind,1,76,81);assert.equal(scene[2].BaseType,rotated[1].BaseType)
+			assert.same(rotated,library.scene(profile,build,case.kind,1,76,81))
+		end
+	end)
 	it("builds a reproducible 3.30 league-item example scene from published item classes",function()
 		local profile=filters.profile("test","Test");local scene=library.scene(profile,build,"Covens & Threads",0,76,81)
 		local file=assert(io.open("Data/LootFilters/patch-3.30.json","rb"));local patch=assert(require("dkjson").decode(file:read("*a")));file:close()

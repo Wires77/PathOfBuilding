@@ -9,6 +9,10 @@ describe("Compiled filter structure",function()
 		p.campaign=require("Modules.LootFilterCampaign").defaults();p.campaign.weapons={"Bow"};p.campaign.upgradeWindow=0;return p
 	end
 	before_each(function() newBuild() end)
+	it("maps a native 3.30 preset without nonexistent safety blocks",function()
+		local p=filters.profile("native","Native");local view=structure.outline(p)
+		assert.equal(view.report.rules,#view.entries);assert.equal(0,#structure.filter(view,"","safety"));assert.is_true(#structure.filter(view,"","base")>500)
+	end)
 	it("does not flag different modifier counts as unreachable in the structure",function()
 		local p=filters.profile("counts","Counts");p.template='Show\n HasExplicitMod >=2 "1"\nHide\n HasExplicitMod >=1 "2"'
 		local view=structure.outline(p);local base=structure.filter(view,"","base")

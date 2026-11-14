@@ -14,7 +14,7 @@ function M.outline(profile,raw,report,parsed)
 	for _,tier in ipairs(profile.tiers or {}) do local rule=require("Modules.LootFilterEditing").rule(tier);if rule then add("tiers","Custom tiers",rule) end end
 	for _,module in ipairs(profile.modules or {}) do if module.enabled then for _,rule in ipairs(module.rules) do if rule.enabled then add("module-"..module.id,"Module: "..module.title,rule) end end end end
 	for _,rule in ipairs(require("Modules.LootFilterCampaign").rules(profile.campaign,profile.theme)) do add("campaign","Campaign policies",rule,"Campaign") end
-	for class in pairsSortByKey(filters.patch().added) do add("safety","3.30 item safety",{title=class,text=""},library.category({text='Class == "'..class..'"'})) end
+	if filters.needsSafety(profile) then for class in pairsSortByKey(filters.patch().added) do add("safety","3.30 item safety",{title=class,text=""},library.category({text='Class == "'..class..'"'})) end end
 	for _,entry in ipairs(library.catalog(profile)) do add("base","Base preset",entry.rule,entry.category) end
 	assert(#sources==#parsed.rules,"Compiled filter structure does not match its sources")
 	local entries,sections,bySection={},{},{}

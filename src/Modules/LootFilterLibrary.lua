@@ -154,6 +154,22 @@ local covensExamples={
 	{"Enshrouded Quiver","Enshrouded Items"},{"Scorched Arm","Viscera"},{"Severed Rhoa Head","Viscera"},
 	{"Afarud Enshrouding Crystal","Stackable Currency"},
 }
+-- Base names and classes are present in the pinned 3.30.0.1.4 client export.
+-- They are examples for testing rules, not recommendations or drop odds.
+local cardExamples={
+	{"The Apothecary","Divination Cards"},{"The Doctor","Divination Cards"},{"The Nurse","Divination Cards"},
+	{"The Patient","Divination Cards"},{"The Gambler","Divination Cards"},{"The Fortunate","Divination Cards"},
+	{"The Scholar","Divination Cards"},{"The Hermit","Divination Cards"},{"Seven Years Bad Luck","Divination Cards"},
+	{"The Dragon's Heart","Divination Cards"},{"The Void","Divination Cards"},{"House of Mirrors","Divination Cards"},
+}
+local essenceExamples={
+	{"Deafening Essence of Greed","Stackable Currency"},{"Deafening Essence of Contempt","Stackable Currency"},
+	{"Deafening Essence of Scorn","Stackable Currency"},{"Deafening Essence of Anger","Stackable Currency"},
+	{"Screaming Essence of Greed","Stackable Currency"},{"Shrieking Essence of Greed","Stackable Currency"},
+	{"Essence of Horror","Stackable Currency"},{"Essence of Delirium","Stackable Currency"},
+	{"Essence of Insanity","Stackable Currency"},{"Essence of Hysteria","Stackable Currency"},
+	{"Remnant of Corruption","Stackable Currency"},
+}
 function M.scene(profile,build,kind,seed,area,itemLevel,targetRules)
 	local list={}
 	if kind=="Tiered gear" then
@@ -166,7 +182,7 @@ function M.scene(profile,build,kind,seed,area,itemLevel,targetRules)
 		return list
 	end
 	if kind=="Build targets" then for _,rule in ipairs(targetRules or filters.generate(build,profile)) do list[#list+1]=M.sample(rule) end end
-	local source=kind=="Covens & Threads" and covensExamples or examples
+	local source=({["Covens & Threads"]=covensExamples,["Divination cards"]=cardExamples,["Essences"]=essenceExamples})[kind] or examples
 	for i=1,#source do local example=source[(i+(seed or 0)-1)%#source+1];local item=M.sample();item.BaseType=example[1];item.Class=example[2];item.Rarity=example[3] or "Normal";item.AreaLevel=area or 83
 		if kind~="Currency" or item.Class=="Stackable Currency" then list[#list+1]=item end
 	end

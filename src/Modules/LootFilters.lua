@@ -11,6 +11,7 @@ local function read(name)
 end
 function M.source() return assert(json.decode(read("source.json"))) end
 function M.patch() return assert(json.decode(read("patch-3.30.json"))) end
+function M.needsSafety(profile) return profile.template~=nil or M.source().nativePatch~="3.30" end
 local function text(value,limit,label)
 	assert(type(value)=="string" and #value<=limit and not value:find("\0"),"Invalid "..label);return value
 end
@@ -191,6 +192,8 @@ end
 function M.migratedBase(profile)
 	local raw=M.base(profile)
 	if profile.template then return M.migrate(require("Modules.LootFilterImports").expand(raw,profile.importFiles,M.limit)) end
+	-- A reviewed native 3.30 preset already encodes the author's current rules.
+	if M.source().nativePatch=="3.30" then return raw,{} end
 	-- Bundled presets and the patch map are immutable until the next restart.
 	local key="migrated-"..profile.strictness
 	if not cache[key] then cache[key]={M.migrate(raw)} end
@@ -206,10 +209,12 @@ function M.compile(profile,includeParsed)
 	for _,module in ipairs(checked.modules or {}) do if module.enabled then for _,rule in ipairs(module.rules) do if rule.enabled then output[#output+1]="\n# PoB rule: "..module.title.." / "..rule.title;output[#output+1]=styled(rule.text,rule.origin and "Build targets") end end end end
 	for _,rule in ipairs(require("Modules.LootFilterCampaign").rules(checked.campaign,checked.theme)) do output[#output+1]="\n# PoB rule: Campaign / "..rule.title;output[#output+1]=styled(rule.text,"Campaign") end
 	-- New league items are shown until a later pinned base can tier them.
-	local patch=M.patch();local classes={};for class in pairs(patch.added) do classes[#classes+1]=class end;table.sort(classes)
-	for _,class in ipairs(classes) do local values={};for _,name in ipairs(patch.added[class]) do values[#values+1]=quote(name) end
-		local kind=require("Modules.LootFilterLibrary").category({text='Class == "'..class..'"'})
-		output[#output+1]=styled("\n# 3.30 new-item safety: "..class.."\nShow\n    BaseType == "..table.concat(values," ").."\n    SetTextColor 255 235 175\n    SetBorderColor 175 110 230\n    SetFontSize 40",kind)
+	if M.needsSafety(checked) then
+		local patch=M.patch();local classes={};for class in pairs(patch.added) do classes[#classes+1]=class end;table.sort(classes)
+		for _,class in ipairs(classes) do local values={};for _,name in ipairs(patch.added[class]) do values[#values+1]=quote(name) end
+			local kind=require("Modules.LootFilterLibrary").category({text='Class == "'..class..'"'})
+			output[#output+1]=styled("\n# 3.30 new-item safety: "..class.."\nShow\n    BaseType == "..table.concat(values," ").."\n    SetTextColor 255 235 175\n    SetBorderColor 175 110 230\n    SetFontSize 40",kind)
+		end
 	end
 	local base,changes=M.migratedBase(checked);output[#output+1]="\n# Pinned base filter\n"..styled(base)
 	local raw=require("Modules.LootFilterDecorators").apply(table.concat(output,"\n"),checked.appearance);assert(#raw<=M.limit,"Compiled filter exceeds 2 MiB")

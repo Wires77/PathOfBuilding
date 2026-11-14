@@ -33,6 +33,7 @@ jobs:
       - name: Exercise controls and audit frames
         run: |
           python3 tools/test_crafting_data_status.py
+          python3 tools/test_update_loot_filter_data.py
           python3 tools/check_loot_filter_data.py
           python3 tools/check_headless_ui.py
       - name: Upload headless UI evidence

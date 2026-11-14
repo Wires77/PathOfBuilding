@@ -4,6 +4,32 @@ describe("Linked planning tools",function()
 	local function craft() return {id="helmet",title="Helmet",slot="Helmet",startingItem="Rarity: NORMAL\nIron Hat\nItem Level: 86",goals={},steps={}} end
 	before_each(function() newBuild();main.popups={} end)
 	after_each(function() main.popups={} end)
+	it("lets an older saved filter review and keep the new base",function()
+		local profile=filters.profile("old-base","Old base");profile.baseCommit="3ab00dd016b00c6be7acfa989baf498842973d54"
+		profile.rules={{id="personal",title="My thread",text='Hide\n BaseType == "Frayed Thread"',enabled=true}}
+		local workspace=require("Modules.PlanningWorkspace").new(build)
+		workspace:Show("filters",{data={schemaVersion=1,activeId=profile.id,profiles={profile}},page="Overview"})
+		workspace.controls.manage:Click();main.popups[1].controls.search:SetText("Audit and update",true);main.popups[1].controls.choose:Click()
+		assert.equal("Filter audit",main.popups[1].title);main.popups[1].controls.choose:Click()
+		local updated=workspace.cache.filters.layout.snapshot().data.profiles[1]
+		assert.equal(filters.source().commit,updated.baseCommit);assert.same(profile.rules,updated.rules)
+		assert.is_truthy(filters.compile(updated));workspace.controls.keep:Click()
+		local xml=build:SaveDB("Filter update");loadBuildFromXML(xml,"Filter update")
+		local saved=build.savers.LootFilters.data.profiles[1];assert.equal(filters.source().commit,saved.baseCommit);assert.same(profile.rules,saved.rules)
+	end)
+	it("selects and deduplicates examples when switching filter scenes",function()
+		local profile=filters.profile("scene-switch","Scene switch");local workspace=require("Modules.PlanningWorkspace").new(build)
+		workspace:Show("filters",{data={schemaVersion=1,activeId=profile.id,profiles={profile}},page="Simulate"})
+		workspace.controls.sceneKind.selFunc(nil,"Divination cards")
+		assert.equal("Divination Cards",workspace.cache.filters.layout.snapshot().sample.Class)
+		workspace.controls.sceneStats:Click();assert.matches("12 results",main.popups[1].controls.count.label);main:ClosePopup()
+		workspace.controls.sceneKind.selFunc(nil,"Essences")
+		assert.matches("Essence",workspace.cache.filters.layout.snapshot().sample.BaseType)
+		workspace.controls.sceneStats:Click();assert.matches("11 results",main.popups[1].controls.count.label);main:ClosePopup()
+		local draft=workspace.cache.filters.layout.snapshot();draft.sample=require("Modules.LootFilterLibrary").sample();draft.sample.BaseType="Divine Orb"
+		workspace:Show("filters",draft);workspace.controls.sceneStats:Click()
+		assert.matches("12 results",main.popups[1].controls.count.label);main:ClosePopup()
+	end)
 	it("distinguishes quoted numeric modifier names from counts when checking linked targets",function()
 		build.savers.CraftingProjects:Upsert(craft());local profile=filters.profile("filter","Filter");profile.rules=filters.generate(build,profile)
 		profile.rules[1].text='Show\n HasExplicitMod "1" "foo"'
