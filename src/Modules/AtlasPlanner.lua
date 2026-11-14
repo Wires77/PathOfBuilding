@@ -1,10 +1,12 @@
 -- Native Atlas plans use pinned GGG data, independently of character passives.
 -- cspell:ignore jsontype
 local json = require("dkjson")
-local M = {versions={"3.27.0","3.29.1","3.29.3","3.30.0-preview","3.30.0-preview-ruthless"},cache={}}
+local M = {versions={"3.27.0","3.27.0-ruthless","3.29.1","3.29.1-ruthless","3.29.3","3.29.3-ruthless","3.30.0-preview","3.30.0-preview-ruthless"},cache={}}
 function M.defaultVersion(treeVersion)
 	treeVersion=treeVersion or ""
-	if treeVersion:match("3_30") and treeVersion:find("ruthless",1,true) then return "3.30.0-preview-ruthless" end
+	if treeVersion:find("ruthless",1,true) then
+		return treeVersion:match("3_30") and "3.30.0-preview-ruthless" or treeVersion:match("3_27") and "3.27.0-ruthless" or "3.29.3-ruthless"
+	end
 	return treeVersion:match("3_30") and "3.30.0-preview" or treeVersion:match("3_27") and "3.27.0" or "3.29.3"
 end
 local function integer(value,low,high,label)

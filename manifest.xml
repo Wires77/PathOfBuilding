@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <PoBVersion>
-	<Version number="2.67.2-ai.preview176" />
+	<Version number="2.67.2-ai.preview177" />
 	<Source part="default" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/" />
 	<Source part="runtime" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/runtime/" platform="win32" />
 	<Source part="program" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/src/" />
@@ -165,7 +165,7 @@
 	<File name="z.dll" part="runtime" sha1="08517c87f5b9e8791ee5d471429be7fbfa5ddd0b" platform="win32" />
 	<File name="zlib1.dll" part="runtime" sha1="49f1ccf17328fca0a831555a35b8eacb1e845ae0" platform="win32" />
 	<File name="zstd.dll" part="runtime" sha1="2a20ae088f2398af5dfd5db2ccc2155eeac8e94d" platform="win32" />
-	<File name="AI/BuildProtocol.cjs" part="program" sha1="6ea9e12e45ec41132987469b695d6cafa25f8d23" />
+	<File name="AI/BuildProtocol.cjs" part="program" sha1="1ee2a7d6231dc17e685f8fb7bbd687d72f801788" />
 	<File name="AI/McpServer.cjs" part="program" sha1="29ff0c8f35eacb9ae56f60f528a1a16016bdb39d" />
 	<File name="Assets/Atlas/3.27.0/atlas-background-3.jpg" part="program" sha1="4db9c28ea7c03108f89785c65bc3b17ef7b64d5e" />
 	<File name="Assets/Atlas/3.27.0/atlas-frame-3.png" part="program" sha1="479b9fa4e1e821905313d42fbc6c1cbd4a672d3b" />
@@ -1239,8 +1239,11 @@
 	<File name="Classes/TradeStatWeightMultiplierListControl.lua" part="program" sha1="b83a9eb1dad0e363acb3ce0cd28bb5e43fe08ced" />
 	<File name="Classes/TreeTab.lua" part="program" sha1="217cc4bc5a357fc1f5eaa72458cad6d05bf35d53" />
 	<File name="Classes/UndoHandler.lua" part="program" sha1="586afba2e6fea36e34c1109d21498bd86d6ead93" />
+	<File name="Data/Atlas/3.27.0-ruthless.json" part="program" sha1="8d0b845c7294a4f7ce091693c5da3f9b1c2081b5" />
 	<File name="Data/Atlas/3.27.0.json" part="program" sha1="48389ee40d1a77cfcae37094d1b0461d8fcd34c8" />
+	<File name="Data/Atlas/3.29.1-ruthless.json" part="program" sha1="b5ca819456685911dde9b9a35a1bca45466676a5" />
 	<File name="Data/Atlas/3.29.1.json" part="program" sha1="372b2b130c621598bbcd837cbb519607c6d97301" />
+	<File name="Data/Atlas/3.29.3-ruthless.json" part="program" sha1="7b3f4a4b0cb99f233cb0907598f2c79772db2c6f" />
 	<File name="Data/Atlas/3.29.3.json" part="program" sha1="126d04e57875cb383d665faa120170ffefa154fa" />
 	<File name="Data/Atlas/3.30.0-preview-ruthless.json" part="program" sha1="08054835d9e9bb73ff259ea2402c26059dde2400" />
 	<File name="Data/Atlas/3.30.0-preview.json" part="program" sha1="bc462455de1afe659cfd3a52b5dc35e9fdae6ff2" />
@@ -1449,9 +1452,9 @@
 	<File name="Launch.lua" part="program" sha1="757a1f5ff9e83cacdc9cb056ec13c90f541b02bb" />
 	<File name="LaunchServer.lua" part="program" sha1="f15bdfbedaf887e19556490dce49b720f8365379" />
 	<File name="Modules/AddImplicitPopup.lua" part="program" sha1="f68d391d10b95c0feef70b7e8e82326a745dcb3b" />
-	<File name="Modules/AtlasArt.lua" part="program" sha1="abbdce888ad94fd2508c1e146f881af2d398c108" />
+	<File name="Modules/AtlasArt.lua" part="program" sha1="d007b7632f8d2e284c7ed46d6a0d98c39d3e2576" />
 	<File name="Modules/AtlasExactRoute.lua" part="program" sha1="29df78490a784fc36d61fdf15d0b8277d966a5e6" />
-	<File name="Modules/AtlasPlanner.lua" part="program" sha1="57b23c55a11f238498b35a467ba89f69aeeae956" />
+	<File name="Modules/AtlasPlanner.lua" part="program" sha1="3a949befbfe5a6364ec92783df6454d8dbd0c391" />
 	<File name="Modules/AtlasStrategy.lua" part="program" sha1="d0dbdd5e749060901b90f11da282d9842f5c39de" />
 	<File name="Modules/AtlasTargets.lua" part="program" sha1="5be35e1fdd93f4fe872d833a9b2144a0751af119" />
 	<File name="Modules/Build.lua" part="program" sha1="972e8291b2ac3360e6914e39ab7db209e78e97d8" />

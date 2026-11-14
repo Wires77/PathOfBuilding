@@ -320,6 +320,8 @@ async function main(){
   if(!secondCorruption.nativeCrafting.state.destroyed) assert.match(secondCorruption.nativeCrafting.itemText,/Twice Corrupted/);
   const starterAtlas={id:'starter-atlas',title:'Starter Atlas',version:'3.29.1',budget:138,nodes:[],progression:{stage:'starter'}};
   const ruthlessVersion='3.30.0-preview-ruthless';
+  const historicalRuthless=await queued('search_atlas_nodes',{baseRevision:context.revision,version:'3.29.3-ruthless',query:'Beyond Portals in your Maps have 5% increased Merging Radius',limit:10},'atlas');
+  assert.ok(historicalRuthless.atlas.matches.some(node=>node.id===27));
   const ruthlessSearch=await queued('search_atlas_nodes',{baseRevision:context.revision,version:ruthlessVersion,query:'Tier 1-15 Maps found have 3% chance',limit:10},'atlas');
   assert.ok(ruthlessSearch.atlas.matches.some(node=>node.stats.some(stat=>stat.includes('Tier 1-15 Maps found have 3% chance'))));
   const ruthlessRoute=await queued('plan_atlas_tree',{baseRevision:context.revision,plan:{id:'ruthless',title:'Ruthless',version:ruthlessVersion,budget:150,nodes:[]},targets:[57123],optimize:true},'atlas');

@@ -9,8 +9,11 @@ from urllib.request import urlopen
 
 VERSIONS = {
     "3.27.0": "dd12728df527cf96a93f91cbee7d5951285b8883",
+    "3.27.0-ruthless": "dd12728df527cf96a93f91cbee7d5951285b8883",
     "3.29.1": "0ae2e0f94f266fc21c86ee8dd561d7b559bf2db4",
+    "3.29.1-ruthless": "0ae2e0f94f266fc21c86ee8dd561d7b559bf2db4",
     "3.29.3": "dcb2a006b68740f3ecbd317775c262fc6ed7b8af",
+    "3.29.3-ruthless": "dcb2a006b68740f3ecbd317775c262fc6ed7b8af",
     "3.30.0-preview": "d225501d7a3e52c991309116473908c284075e89",
     "3.30.0-preview-ruthless": "d225501d7a3e52c991309116473908c284075e89",
 }
@@ -72,6 +75,8 @@ for version in selected:
         result["compatibleModes"] = ["Ruthless Standard", "Ruthless Covens of Umbra"] if ruthless else ["Standard", "Covens of Umbra"]
         result["leagueSource"] = league_source
         result["leagueSha256"] = hashlib.sha256(league_raw).hexdigest()
+    elif ruthless:
+        result["compatibleModes"] = ["Ruthless Standard"]
     if ruthless:
         # Reuse the existing artwork only after checking the pinned exports agree.
         with urlopen(source.replace("/ruthless.json", "/data.json"), timeout=30) as response:

@@ -19,4 +19,18 @@ describe("3.30 Ruthless Atlas preview",function()
 		assert.has_error(function() atlas.url(plan) end)
 		assert.has_error(function() atlas.import("https://www.pathofexile.com/fullscreen-atlas-skill-tree/AAAA",version) end)
 	end)
+	it("loads historical Ruthless Standard graphs and chooses matching defaults",function()
+		for _,case in ipairs({{"3.27.0-ruthless","3.27.0",132,"f3df4307bcb35ff807822173954b050c171ce8c63cf4c04ceb024cdfffa2ff68"},
+			{"3.29.1-ruthless","3.29.1",138,"51fa3eddcd73e31f91def9c3d7c0cb3ddf9e917f016d0a145a104dfd64d2da6b"},
+			{"3.29.3-ruthless","3.29.3",138,"08027e339b6edfec7b571cfb080d45c55edf5090df2134b3d1dee3e3f99f480f"}}) do
+			local tree=atlas.tree(case[1]);assert.equal("ruthless",tree.mode);assert.equal(case[3],tree.maxPoints);assert.equal(case[4],tree.sha256)
+			assert.same({"Ruthless Standard"},tree.compatibleModes)
+			assert.same({"Beyond Portals in your Maps have 5% increased Merging Radius"},tree.nodes[27].stats)
+			assert.not_same(atlas.tree(case[2]).nodes[27].stats,tree.nodes[27].stats)
+			assert.is_truthy(require("Modules.AtlasArt").load(case[1]))
+			local plan=atlas.connect({id="historic",title="Historical Ruthless",version=case[1],budget=case[3],nodes={}}, {27})
+			assert.equal(case[1],atlas.import(atlas.export(plan),case[1]).version);assert.equal("Ruthless",atlas.report(plan).mode)
+		end
+		assert.equal("3.27.0-ruthless",atlas.defaultVersion("3_27_ruthless"));assert.equal("3.29.3-ruthless",atlas.defaultVersion("3_29_ruthless"))
+	end)
 end)

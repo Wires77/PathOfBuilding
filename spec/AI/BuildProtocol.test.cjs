@@ -421,6 +421,15 @@ test('queues searches and plans for the pinned Ruthless Atlas', t => {
   assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir,'AI-build-request.json'))).plan.version,version);
 });
 
+test('accepts bundled historical Ruthless Atlas versions', t => {
+  const f=fixture(t);const base={baseRevision:f.state.revision};
+  for(const version of ['3.27.0-ruthless','3.29.1-ruthless','3.29.3-ruthless']){
+    f.call('search_atlas_nodes',{...base,version,query:'Beyond',limit:10});
+    assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir,'AI-build-request.json'))).version,version);
+    fs.unlinkSync(path.join(f.dir,'AI-build-request.json'));
+  }
+});
+
 
 test('queues offline appearance, colour goals and optimized Atlas routing', t => {
   const f=fixture(t);const base={baseRevision:f.state.revision};
