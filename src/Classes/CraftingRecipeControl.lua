@@ -110,8 +110,11 @@ function Panel.Open(recipe,currentAction,onKeep,model)
 			for _,entry in ipairs(model.essences or {}) do
 				local action={method="essence",essenceId=entry.id}
 				local mod=model.byId[entry.modId];local guaranteed=mod and table.concat(mod," / ") or "Unavailable"
+				local details={entry.name,"Guaranteed on this base: "..guaranteed}
+				if entry.maxModLevel then details[#details+1]="Other random modifiers are restricted to level "..entry.maxModLevel.." or below." end
+				details[#details+1]="Crafting data: "..sim.dataPatch..". The item must meet the Essence's requirements when this step runs."
 				entries[#entries+1]={id=entry.id,label=entry.name,search=entry.id,category="Essences",icon=workbench.icon("essence",action,model),action=action,
-					details={entry.name,"Guaranteed on this base: "..guaranteed,"Crafting data: "..sim.dataPatch..". The item must meet the Essence's requirements when this step runs."}}
+					details=details}
 			end
 		end
 		for _,method in ipairs({"harvest_reforge","harvest_augment"}) do for _,tag in ipairs({"attack","caster","physical","fire","cold","lightning","chaos","life","defences","speed","critical","influence"}) do

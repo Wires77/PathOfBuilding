@@ -265,6 +265,14 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 		local found;for _,row in ipairs(main.popups[1].controls.itemMods.list) do if row.affixId=="PlayerIsDeliriousEssence1" then found=true end end
 		assert(found,"The belt card did not display Trickery's modifier")
 		frame("crafting-trickery-applied");ui:click("close")
+		require("Classes.CraftingSimulatorControl").Open(build,{id="desolation-menu-ui",title="Essence of Desolation",slot="Belt",startingItem="Rarity: NORMAL\nLeather Belt\nItem Level: 86",goals={},steps={}})
+		ui:click("settings");ui:text("paletteSearch",sim.labels.essence);ui:click("paletteUse");ui:choose("option","Essence of Desolation","label")
+		local capHint={};for _,row in ipairs(main.popups[1].controls.actionHint.list) do capHint[#capHint+1]=row[1] end
+		assert(table.concat(capHint," "):find("level 15",1,true),"Desolation's random-modifier cap is not visible")
+		frame("crafting-desolation-selected");ui:click("apply")
+		local desolationFound;for _,row in ipairs(main.popups[1].controls.itemMods.list) do if row.affixId=="MagicFlaskEffectNoAdjacentFlasksEssence1" then desolationFound=true end end
+		assert(desolationFound,"The belt card did not display Desolation's modifier")
+		frame("crafting-desolation-applied");ui:click("close")
 	end
 
 	do

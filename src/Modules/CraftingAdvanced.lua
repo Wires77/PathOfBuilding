@@ -232,6 +232,7 @@ function A.extend(M,api)
 		for _,entry in ipairs(source) do
 			local id,mod=entry.id,entry.mod or model.byId[entry.id]
 			local legal=counts[mod.type] < cap(model,state)[mod.type] and (not options.type or mod.type == options.type)
+			if state.maxEssenceModLevel and mod.level>state.maxEssenceModLevel then legal=false end
 			for _,group in ipairs(groups(model,id)) do if used[group] then legal=false end end
 			if options.tag and not hasTag(model,id,options.tag) then legal=false end
 			if options.influence and influenced(model,id) ~= options.influence then legal=false end

@@ -210,9 +210,11 @@ function M.model(raw)
 	end
 	for id,essence in pairs(data.essences) do
 		local modId=essence.mods[item.type]
-		if modId and model.byId[modId] then model.essences[#model.essences+1]={id=id,name=essence.name,modId=modId,tier=essence.tier,type=essence.type} end
+		if modId and model.byId[modId] then model.essences[#model.essences+1]={id=id,name=essence.name,modId=modId,tier=essence.tier,type=essence.type,maxModLevel=({35,45,60,75})[essence.tier]} end
 	end
 	if next(model.trickery330) then model.essences[#model.essences+1]={id="Metadata/Items/Currency/CurrencyEssenceUber1",name="Essence of Trickery",modId="PlayerIsDeliriousEssence1",tier=8,type=24} end
+	local desolation=require("Modules.CraftingDesolation330")[item.type]
+	if desolation and model.byId[desolation] then model.essences[#model.essences+1]={id="Metadata/Items/Currency/CurrencyEssenceFaridun1",name="Essence of Desolation",modId=desolation,tier=0,canReforgeRare=true,maxModLevel=15} end
 	table.sort(model.essences,function(a,b) return a.id < b.id end)
 	local state={rarity=item.rarity,affixes={}}
 	for _,list in ipairs({item.prefixes,item.suffixes}) do for _,entry in ipairs(list) do
@@ -253,7 +255,7 @@ function M.pool(model,state)
 	local result,total={},0
 	for _,entry in ipairs(model.mods) do
 		local mod=entry.mod
-		local blocked=c[mod.type] >= caps[mod.type] or c.groups[mod.group] or model.item.clusterJewel and M.isClusterSpeedMod(model,entry.id) and c.groups[M.clusterSpeedGroup]
+		local blocked=c[mod.type] >= caps[mod.type] or c.groups[mod.group] or state.maxEssenceModLevel and mod.level>state.maxEssenceModLevel or model.item.clusterJewel and M.isClusterSpeedMod(model,entry.id) and c.groups[M.clusterSpeedGroup]
 		for _,tag in ipairs(mod.modTags or { }) do if f[tag] then blocked=true end end
 		if not blocked then
 			local weight=next(c.tags) and model.item:GetModSpawnWeight(mod,c.tags) or entry.weight
@@ -377,9 +379,12 @@ function M.essenceReason(model,state,id)
 	if not selected then return "This essence cannot be used on this base" end
 	local f=flags(model,state)
 	if f.prefixes or f.suffixes or f.explicitAttack or f.explicitCaster then return "Remove meta modifiers before applying an essence" end
-	if not (state.rarity=="NORMAL" or state.rarity=="RARE" and (selected.tier>=5 or selected.type>0)) then return "This essence cannot be used on the current rarity" end
-	local mod=model.byId[selected.modId]
-	for _,entry in ipairs(state.affixes) do if mod.group and entry.fractured and model.byId[entry.id].group==mod.group then return "The essence modifier conflicts with a fractured modifier" end end
+	if not (state.rarity=="NORMAL" or state.rarity=="RARE" and (selected.tier>=5 or selected.canReforgeRare)) then return "This essence cannot be used on the current rarity" end
+	local metadata=require("Modules.CraftingAdvanced").data().mods
+	local function groups(modId) local meta=metadata[modId];return meta and meta.groups or {model.byId[modId].group} end
+	for _,entry in ipairs(state.affixes) do if entry.fractured then
+		for _,left in ipairs(groups(selected.modId)) do for _,right in ipairs(groups(entry.id)) do if left==right then return "The essence modifier conflicts with a fractured modifier" end end end
+	end end
 	return nil,selected
 end
 function M.essenceAvailable(model,state)
@@ -434,14 +439,15 @@ function M.action(model,input,action,random)
 		local reason,selected=M.essenceReason(model,state,action.essenceId);assert(not reason,reason)
 		clear(model,state,true); state.rarity="RARE"
 		local mod=model.byId[selected.modId]
-		assert(not counts(model,state).groups[mod.group],"The essence modifier conflicts with a fractured modifier")
 		state.affixes[#state.affixes+1]={id=selected.modId,range=M.rollRange(mod,random)}
+		state.maxEssenceModLevel=selected.maxModLevel
 		local value=random(); local target=value < 8/12 and 4 or value < 11/12 and 5 or 6
 		target=math.min(target,M.capacities(model,state).total)
 		while #state.affixes < target do add(model,state,random) end
 	else error("Unsupported crafting action: "..tostring(method)) end
 	clearPartialLocks(state)
 	state.rollBlock=nil
+	state.maxEssenceModLevel=nil
 	return state
 end
 
