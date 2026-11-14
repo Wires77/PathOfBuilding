@@ -20,7 +20,7 @@ This is a comparison, not a claim of FilterBlade parity. Its website, customizer
 | Category coverage | Sixteen families including cards, flasks, tinctures, jewels, recipes and special currency | Deeper nested sections |
 | Rule editing | Stable override identities across catalogue, matched rules and structure; provable shadowing diagnostics | Broader predicate-overlap analysis |
 | Show/hide toggles | Personal enable/disable; action editor | Per-category inclusion policies |
-| Rule order | Select with one click, edit with a double-click, and drag personal rules or move them up/down relative to visible rules | Base-filter rule order remains pinned |
+| Rule order | Select with one click, edit with a double-click, and drag personal rules or use arrows or Alt+Up/Down relative to visible rules | Base-filter rule order remains pinned |
 | Currency tier lists | Custom/preset tier browsing, exact item movement, drag/drop, tier creation/removal/order | Economy-driven automatic reassignment |
 | Stacked currency tiering | Existing stack conditions are preserved and editable | Uniform/adjusted stacked-tier controls |
 | Economy-based tiers | Pinned NeverSink snapshot | Live pricing, outlier handling and recalculation |

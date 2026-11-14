@@ -263,6 +263,7 @@ function M.Open(build,source,layout,controller)
 		local categoryRows={};for _,name in ipairs(library.categories) do categoryRows[#categoryRows+1]={height=36,textSize=14,"^7"..name,name=name} end
 		c.categories=new("TextListControl"):TextListControl(ui.anchor,{16,120,sidebar,h-180},nil,categoryRows)
 		ui.selectable(c.categories,function(row) return row.name end,function(row) category=row.name;if category=="Campaign" then scope="Policies" end;selected=nil;reopen() end)
+		c.categories.selectedKey=category
 		local offset=0;for _,row in ipairs(categoryRows) do row.selected=row.name==category;if row.selected then c.categories.controls.scrollBar.offset=math.max(0,offset-(h-240)) end;offset=offset+row.height end
 		c.search=new("EditControl"):EditControl(ui.anchor,{listX,120,listW-138,26},query,"Find an item or rule",nil,160,function(value) query=value end)
 		c.source=new("DropDownControl"):DropDownControl(ui.anchor,{listX+listW-130,120,130,26},{"My rules","Base filter","Policies"},function(_,value) scope=value;selected=nil;query="";if scope=="Policies" then category="Campaign" elseif category=="Campaign" then category="All items" end;reopen() end);c.source:SelByValue(scope)
@@ -273,8 +274,8 @@ function M.Open(build,source,layout,controller)
 			for _,entry in ipairs(entries) do if entry.rule.id==selected then selectedEntry=entry end;rows[#rows+1]={height=76,textSize=14,"",entry=entry} end
 			if not selectedEntry then selectedEntry=entries[1];selected=selectedEntry and selectedEntry.rule.id end
 			if #rows==0 then rows=ui.rows({scope=="My rules" and "No personal pickups here yet." or "No matching base rules.","Try another category or search."},listW-28,14) end
-			c.rules.list=rows;updateSelection(selectedEntry)
-			c.ruleCount.label="^7"..#entries.." matching rules"..(scope=="My rules" and #entries>1 and " | drag to reorder" or "")
+			c.rules.list=rows;c.rules.selectedKey=selected;updateSelection(selectedEntry)
+			c.ruleCount.label="^7"..#entries.." rules"..(scope=="My rules" and #entries>1 and " | drag or Alt+arrows" or "")
 		end
 		local draw=c.rules.Draw
 		function c.rules:Draw(viewport)
@@ -294,7 +295,12 @@ function M.Open(build,source,layout,controller)
 		ui.selectable(c.rules,function(row) return row.entry and row.entry.rule.id end,function(row) updateSelection(row.entry) end,edit)
 		c.rules.onClick=function(hit) if hit then c.rules.planningSelect(hit.line,false) end end
 		local function reorder(source,target,after)
-			if require("Modules.LootFilterRuleOrder").move(profile.rules,source,target,after) then selected=source;draft();reopen();return true end
+			if require("Modules.LootFilterRuleOrder").move(profile.rules,source,target,after) then
+				local focused=c.rules.hasFocus;selected=source;draft();reopen()
+				local workspace=build.planningWorkspace
+				if focused and workspace and workspace.page=="filters" and workspace.body and workspace.controls.rules then workspace.body:SelectControl(workspace.controls.rules) end
+				return true
+			end
 		end
 		local down,up=c.rules.OnKeyDown,c.rules.OnKeyUp
 		function c.rules:OnKeyDown(key,doubleClick,...)
@@ -334,12 +340,14 @@ function M.Open(build,source,layout,controller)
 			for i,entry in ipairs(entries) do if entry.rule.id==selected then return entries[i+delta] end end
 		end
 		local function move(delta) local target=visibleNeighbour(delta);if target and not target.base then reorder(selected,target.rule.id,delta>0) end end
+		local navigate=c.rules.planningMove
+		c.rules.planningMove=function(delta) if IsKeyDown("ALT") then move(delta) else navigate(delta) end end
 		button(c,"up",listX+listW-62,148,26,"^",function() move(-1) end);c.up.height=20
 		button(c,"down",listX+listW-30,148,26,"v",function() move(1) end);c.down.height=20
 		c.up.enabled=function() return visibleNeighbour(-1)~=nil end;c.down.enabled=function() return visibleNeighbour(1)~=nil end
 		c.up.tooltipText="Move before the previous visible rule. Hidden rules between them will also be crossed."
 		c.down.tooltipText="Move after the next visible rule. Hidden rules between them will also be crossed."
-		c.rules.tooltipText="Drag a personal rule above or below another, or use the arrows. Rule order determines priority."
+		c.rules.tooltipText="Drag a personal rule, use the arrows, or press Alt+Up/Down. Rule order determines priority."
 		c.preview=new("Control"):Control(ui.anchor,{detailX,120,detailW,126});backgrounds.preview=true
 		function c.preview:Draw() local x,y=self:GetPos();visual.floor(x,y,detailW,126);visual.chip(x+8,y+8,detailW-16,112,item,result) end
 		c.detail=new("TextListControl"):TextListControl(ui.anchor,{detailX,260,detailW,h-382},nil,{})
