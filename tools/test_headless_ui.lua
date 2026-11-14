@@ -273,6 +273,11 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 		local desolationFound;for _,row in ipairs(main.popups[1].controls.itemMods.list) do if row.affixId=="MagicFlaskEffectNoAdjacentFlasksEssence1" then desolationFound=true end end
 		assert(desolationFound,"The belt card did not display Desolation's modifier")
 		frame("crafting-desolation-applied");ui:click("close")
+		require("Classes.CraftingSimulatorControl").Open(build,{id="desolation-gloves-ui",title="Desolation gloves",slot="Gloves",startingItem="Rarity: NORMAL\nIron Gauntlets\nItem Level: 86",goals={},steps={}})
+		ui:click("settings");ui:text("paletteSearch",sim.labels.essence);ui:click("paletteUse");ui:choose("option","Essence of Desolation","label");ui:click("apply")
+		local texts={};for _,row in ipairs(main.popups[1].controls.itemMods.list) do if row.affixId=="AttackCastSpeedPerNearbyEnemyEssence1" then texts[#texts+1]=StripEscapes(row[1]) end end
+		assert(table.concat(texts," "):gsub("%s+"," "):find("within 6 metres",1,true),"The item card did not use the 3.30 modifier wording")
+		frame("crafting-desolation-gloves");ui:click("close")
 	end
 
 	do

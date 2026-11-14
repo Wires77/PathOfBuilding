@@ -1918,6 +1918,7 @@ local modTagList = {
 	["per enemy hit taken recently"] =  { tag = { type = "Multiplier", var = "BeenHitRecently" } },
 	["for each nearby enemy, up to (%d+)%%"] = function(num) return { tag = { type = "Multiplier", var = "NearbyEnemies", limit = num, limitTotal = true } } end,
 	["for each nearby enemy, up to a maximum of (%d+)%%"] = function(num) return { tag = { type = "Multiplier", var = "NearbyEnemies", limit = num, limitTotal = true } } end,
+	["for each enemy within 6 metres, up to a maximum of (%d+)%%"] = function(num) return { tag = { type = "Multiplier", var = "NearbyEnemies", limit = num, limitTotal = true } } end,
 	["while you have iron reflexes"] = { tag = { type = "Condition", var = "HaveIronReflexes" } },
 	["while you do not have iron reflexes"] = { tag = { type = "Condition", var = "HaveIronReflexes", neg = true } },
 	["while you have elemental overload"] = { tag = { type = "Condition", var = "HaveElementalOverload" } },

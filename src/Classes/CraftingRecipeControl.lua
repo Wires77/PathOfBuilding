@@ -109,7 +109,7 @@ function Panel.Open(recipe,currentAction,onKeep,model)
 			end
 			for _,entry in ipairs(model.essences or {}) do
 				local action={method="essence",essenceId=entry.id}
-				local mod=model.byId[entry.modId];local guaranteed=mod and table.concat(mod," / ") or "Unavailable"
+				local mod=model.descriptions330[entry.modId] or model.byId[entry.modId];local guaranteed=mod and table.concat(mod," / ") or "Unavailable"
 				local details={entry.name,"Guaranteed on this base: "..guaranteed}
 				if entry.maxModLevel then details[#details+1]="Other random modifiers are restricted to level "..entry.maxModLevel.." or below." end
 				details[#details+1]="Crafting data: "..sim.dataPatch..". The item must meet the Essence's requirements when this step runs."

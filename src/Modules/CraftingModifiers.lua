@@ -23,7 +23,7 @@ function M.catalog(model)
 	end end
 	for _,entry in ipairs(model.influencePool or {}) do add(entry.id,entry.mod,"Influence",entry.weight) end
 	for _,entry in ipairs(model.bench) do add(entry.id,entry.mod,"Bench") end
-	for _,entry in ipairs(model.essences) do add(entry.modId,model.byId[entry.modId],"Essence") end
+	for _,entry in ipairs(model.essences) do add(entry.modId,model.descriptions330[entry.modId] or model.byId[entry.modId],"Essence") end
 	for id in pairs(model.special or {}) do add(id,model.byId[id],"Special") end
 	local families={}
 	for _,row in ipairs(rows) do if row.source=="Natural" or row.source=="Influence" then local key=row.type..":"..table.concat(row.groups,":")..":"..row.source;row.family=key;families[key]=families[key] or {};families[key][row.level]=true end end

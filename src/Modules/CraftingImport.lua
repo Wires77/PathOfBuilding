@@ -28,9 +28,9 @@ function I.resolve(M,model,state)
 		used[found]=true
 	end end
 	local candidates,seen={},{ }
-	local function consider(id,crafted,legacy)
-		local key=id..(legacy and ":legacy" or ":current");if seen[key] then return end;seen[key]=true
-		local mod=legacy and model.legacyLightRadius[id] or model.byId[id];if not mod or #mod == 0 then return end
+	local function consider(id,crafted,legacy,description330)
+		local key=id..(legacy and ":legacy" or description330 and ":description330" or ":current");if seen[key] then return end;seen[key]=true
+		local mod=legacy and model.legacyLightRadius[id] or description330 and model.descriptions330[id] or model.byId[id];if not mod or #mod == 0 then return end
 		local indices,ranges,fractured={},{},nil
 		for _,template in ipairs(mod) do
 			local found,values
@@ -46,13 +46,14 @@ function I.resolve(M,model,state)
 			for _,value in ipairs(values) do ranges[#ranges+1]=value end
 		end
 		if legacy then for _,candidate in ipairs(candidates) do if candidate.entry.id==id and not candidate.entry.legacyLightRadius and table.concat(candidate.indices,",")==table.concat(indices,",") then return end end end
-		candidates[#candidates+1]={indices=indices,entry={id=id,range=#ranges == 0 and 0.5 or #ranges == 1 and ranges[1] or ranges,crafted=crafted or nil,fractured=fractured or nil,legacyLightRadius=legacy or nil}}
+		candidates[#candidates+1]={indices=indices,entry={id=id,range=#ranges == 0 and 0.5 or #ranges == 1 and ranges[1] or ranges,crafted=crafted or nil,fractured=fractured or nil,legacyLightRadius=legacy or nil,description330=description330 or nil}}
 	end
 	for _,entry in ipairs(model.mods) do consider(entry.id,false) end
 	for id in pairs(model.legacyAbyss or {}) do consider(id,false) end
 	for id in pairs(model.unveiledJewels or {}) do consider(id,false) end
 	for _,entry in ipairs(model.mods) do if model.legacyLightRadius[entry.id] then consider(entry.id,false,true) end end
 	for _,entry in ipairs(model.essences) do consider(entry.modId,false) end
+	for _,entry in ipairs(model.essences) do if model.descriptions330[entry.modId] then consider(entry.modId,false,false,true) end end
 	for _,entry in ipairs(model.bench) do consider(entry.id,true) end
 	for _,list in ipairs({data.veiledMods,data.beastCraft}) do for id,mod in pairs(list) do
 		if (mod.type == "Prefix" or mod.type == "Suffix") and mod.level <= model.item.itemLevel and model.item:GetModSpawnWeight(mod) > 0 then model.byId[id]=mod;consider(id,false) end

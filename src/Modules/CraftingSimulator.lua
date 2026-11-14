@@ -115,13 +115,13 @@ end
 -- Use the native renderer so every preview retains the same independent rolls.
 function M.rolledLines(mod,range) return itemLib.applyModRanges(mod,range) end
 function M.entryMod(model,entry)
-	return entry.legacyLightRadius and assert(model.legacyLightRadius[entry.id],"Unknown legacy Light Radius modifier") or model.byId[entry.id]
+	return entry.legacyLightRadius and assert(model.legacyLightRadius[entry.id],"Unknown legacy Light Radius modifier") or entry.description330 and assert(model.descriptions330[entry.id],"Unknown 3.30 modifier description") or model.byId[entry.id]
 end
 
 function M.toItem(model,state)
 	local item=new("Item"):Item(model.raw)
 	item.affixes=model.byId
-	for _,entry in ipairs(state.affixes) do if entry.legacyLightRadius then
+	for _,entry in ipairs(state.affixes) do if entry.legacyLightRadius or entry.description330 then
 		if item.affixes==model.byId then item.affixes={};for id,mod in pairs(model.byId) do item.affixes[id]=mod end end
 		item.affixes[entry.id]=M.entryMod(model,entry)
 	end end
@@ -172,6 +172,7 @@ function M.model(raw)
 	local extraTags={}
 	if item.clusterJewel and item.clusterJewel.skills[item.clusterJewelSkill] then extraTags[item.clusterJewel.skills[item.clusterJewelSkill].tag]=true end
 	for id,mod in pairs(item.affixes or { }) do model.byId[id]=mod end
+	require("Modules.CraftingDescriptions330").prepare(model)
 	require("Modules.CraftingUnveiledJewel330").prepare(model)
 	require("Modules.CraftingUnveiledJewel330").restoreIdentities(model,raw)
 	model.trickery330={}
@@ -220,7 +221,8 @@ function M.model(raw)
 	for _,list in ipairs({item.prefixes,item.suffixes}) do for _,entry in ipairs(list) do
 		if entry.modId ~= "None" then
 			assert(model.byId[entry.modId],"Starting item has an unknown modifier")
-			state.affixes[#state.affixes+1]={id=entry.modId,range=type(entry.range) == "table" and copyTable(entry.range) or entry.range,fractured=entry.fractured or false,legacyLightRadius=model.legacyLightRadius[entry.modId] and true or nil}
+			local current=model.descriptions330[entry.modId]
+			state.affixes[#state.affixes+1]={id=entry.modId,range=type(entry.range) == "table" and copyTable(entry.range) or entry.range,fractured=entry.fractured or false,legacyLightRadius=model.legacyLightRadius[entry.modId] and true or nil,description330=current and raw:find(current[1],1,true) and true or nil}
 		end
 	end end
 	local reconstructed=M.toItem(model,state)
@@ -439,7 +441,7 @@ function M.action(model,input,action,random)
 		local reason,selected=M.essenceReason(model,state,action.essenceId);assert(not reason,reason)
 		clear(model,state,true); state.rarity="RARE"
 		local mod=model.byId[selected.modId]
-		state.affixes[#state.affixes+1]={id=selected.modId,range=M.rollRange(mod,random)}
+		state.affixes[#state.affixes+1]={id=selected.modId,range=M.rollRange(mod,random),description330=model.descriptions330[selected.modId] and true or nil}
 		state.maxEssenceModLevel=selected.maxModLevel
 		local value=random(); local target=value < 8/12 and 4 or value < 11/12 and 5 or 6
 		target=math.min(target,M.capacities(model,state).total)
@@ -582,6 +584,7 @@ function M.validateState(model,state)
 		assert(entry.crafted == nil or type(entry.crafted) == "boolean","Invalid crafted flag")
 		assert(entry.fractured == nil or type(entry.fractured) == "boolean","Invalid fractured flag")
 		assert(entry.legacyLightRadius == nil or type(entry.legacyLightRadius) == "boolean","Invalid legacy modifier flag")
+		assert(entry.description330 == nil or type(entry.description330) == "boolean" and model.descriptions330[entry.id],"Invalid 3.30 modifier description")
 		assert(not entry.legacyLightRadius or legacy[entry.id] and model.legacyLightRadius[entry.id],"Legacy Light Radius values must come from the starting item")
 		if entry.legacyLightRadius then
 			local initial=legacy[entry.id];local current=type(entry.range)=="table" and entry.range or {entry.range or 0.5}

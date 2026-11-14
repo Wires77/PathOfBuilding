@@ -35,7 +35,7 @@ local function values(model,state)
 	model=sim.context(model,state)
 	local result={}
 	for _,entry in ipairs(state.affixes) do
-		local texts=sim.rolledLines(model.byId[entry.id],entry.range)
+		local texts=sim.rolledLines(sim.entryMod(model,entry),entry.range)
 		result[entry.id]=table.concat(texts," / ")..(entry.fractured and " [fractured]" or entry.crafted and " [crafted]" or "")
 	end
 	return result
