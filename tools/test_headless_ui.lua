@@ -818,7 +818,10 @@ for _,size in ipairs({{1280,720},{1024,768},{960,640}}) do
 			{id="order-c",title="Match C",text='Show\n BaseType == "Iron Hat"',enabled=true}}
 		ui:click("viewCustomize");ui:choose("source","My rules");ui:text("search","Match");local list=build.planningWorkspace.controls.rules
 		assert(#list.list==2,"Filtered rule fixture did not show two rules")
-		local x,y=list:GetPos();ui:dragAt(x+30,y+2+76+20,0,-76,"LEFTBUTTON")
+		local x,y=list:GetPos();ui:clickAt(x+30,y+20)
+		assert(#main.popups==0 and build.planningWorkspace.cache.filters.layout.snapshot().rule=="order-a","Single click did not select the rule without opening its editor")
+		ui:clickAt(x+30,y+20,true);assert(#main.popups==1,"Double click did not open the rule editor");ui:click("cancel")
+		ui:dragAt(x+30,y+2+76+20,0,-76,"LEFTBUTTON")
 		local function ids() local result={};for _,rule in ipairs(profile.rules) do result[#result+1]=rule.id end;return table.concat(result,",") end
 		assert(ids()=="order-c,order-a,order-hidden","Dragging did not move the rule before the visible target: "..ids())
 		frame("filter-rule-dragged");assert(build.planningWorkspace.controls.down:IsEnabled(),"The selected rule cannot move down")

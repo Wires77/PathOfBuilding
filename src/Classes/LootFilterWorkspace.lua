@@ -292,14 +292,14 @@ function M.Open(build,source,layout,controller)
 			end;top=top+row.height end;SetViewport()
 		end
 		ui.selectable(c.rules,function(row) return row.entry and row.entry.rule.id end,function(row) updateSelection(row.entry) end,edit)
+		c.rules.onClick=function(hit) if hit then c.rules.planningSelect(hit.line,false) end end
 		local function reorder(source,target,after)
 			if require("Modules.LootFilterRuleOrder").move(profile.rules,source,target,after) then selected=source;draft();reopen();return true end
 		end
 		local down,up=c.rules.OnKeyDown,c.rules.OnKeyUp
-		function c.rules:OnKeyDown(key,...)
-			local hit=self.hoveredLine;local originalClick=self.onClick
-			if key=="LEFTBUTTON" and scope=="My rules" then self.onClick=function(row) if row then self.planningSelect(row.line,false) end end end
-			local result=down(self,key,...);self.onClick=originalClick
+		function c.rules:OnKeyDown(key,doubleClick,...)
+			local hit=self.hoveredLine;local result=down(self,key,doubleClick,...)
+			if key=="LEFTBUTTON" and doubleClick and hit and hit.line.entry then edit();return self end
 			if key=="LEFTBUTTON" and scope=="My rules" and hit and hit.line.entry and not hit.line.entry.base then
 				local x,y=GetCursorPos();self.dragRule=hit.line.entry.rule.id;self.dragX=x;self.dragY=y
 			end
@@ -310,8 +310,7 @@ function M.Open(build,source,layout,controller)
 				local source=self.dragRule;self.dragRule=nil;local x,y=GetCursorPos();local hit=self.hoveredLine
 				local moved=math.abs(x-self.dragX)>4 or math.abs(y-self.dragY)>4
 				if self:IsMouseOver() and hit and hit.line.entry and not hit.line.entry.base then
-					if moved then if reorder(source,hit.line.entry.rule.id,y>=hit.y+hit.line.height/2) then return self end
-					elseif hit.line.entry.rule.id==source then edit();return self end
+					if moved and reorder(source,hit.line.entry.rule.id,y>=hit.y+hit.line.height/2) then return self end
 				end
 			end
 			return up(self,key,...)

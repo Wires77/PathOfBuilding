@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import tempfile
+import time
 import zipfile
 from pathlib import Path
 
@@ -81,8 +82,13 @@ def main():
         frame = json.loads((frames / f"{width}-filter-background-default-alpha.json").read_text())
         expected = (10 / 255, 20 / 255, 30 / 255, 240 / 255)
         assert any(command.get("kind") == "rect" and all(abs(a-b) < 1e-6 for a, b in zip(command.get("color", ()), expected)) and len(command.get("color", ())) == 4 for command in frame["commands"]), "Background preview lost the game-default opacity"
+    # Tree captures can take much longer than small dialogs. Start the largest
+    # captures first so one tree does not hold the entire audit open at the end.
+    scheduled = sorted(paths, key=lambda path: (-path.stat().st_size, path.name))
+    render_start = time.perf_counter()
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
-        failures = [failure for failure in pool.map(render_frame, paths) if failure]
+        failures = [failure for failure in pool.map(render_frame, scheduled) if failure]
+    render_seconds = time.perf_counter() - render_start
     tooltip = json.loads((directory / "expected-audit-tooltip.json").read_text())
     assert any(c["kind"] == "text" and c["sublayer"] == 100 and "Alt+3" in c["text"] for c in tooltip["commands"]), "Native tooltip fixture did not draw its overlay"
     image, audit = render(tooltip)
@@ -101,7 +107,7 @@ def main():
         dirty = None
     assert source_hashes() == hashes, "Source files changed during UI rendering; repeat against stable sources"
     (directory / "report.json").write_text(json.dumps({"revision": revision, "workingTreeChanges": dirty,
-        "sourceHashes": hashes, "sourceStable": True, "frames": len(paths), "failures": failures, "auditSelfTest": "passed",
+        "sourceHashes": hashes, "sourceStable": True, "frames": len(paths), "renderSeconds": round(render_seconds, 3), "failures": failures, "auditSelfTest": "passed",
         "limitations": negative["limitations"]}, indent=2))
     print(f"Headless UI: {len(paths)} frames, {len(failures)} failures. Artifacts: {directory}")
     if failures:
