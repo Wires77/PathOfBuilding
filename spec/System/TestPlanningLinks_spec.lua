@@ -25,10 +25,15 @@ describe("Linked planning tools",function()
 		workspace.controls.sceneStats:Click();assert.matches("12 results",main.popups[1].controls.count.label);main:ClosePopup()
 		workspace.controls.sceneKind.selFunc(nil,"Essences")
 		assert.matches("Essence",workspace.cache.filters.layout.snapshot().sample.BaseType)
-		workspace.controls.sceneStats:Click();assert.matches("11 results",main.popups[1].controls.count.label);main:ClosePopup()
+		for _,row in ipairs(workspace.controls.selection.list) do assert.is_nil(row[1]:find("Unidentified item tier",1,true)) end
+		workspace.controls.sceneStats:Click();assert.matches("12 results",main.popups[1].controls.count.label)
+		for _,row in ipairs(main.popups[1].controls.results.list) do assert.is_nil(row[1]:find("(no tier)",1,true)) end;main:ClosePopup()
 		local draft=workspace.cache.filters.layout.snapshot();draft.sample=require("Modules.LootFilterLibrary").sample();draft.sample.BaseType="Divine Orb"
 		workspace:Show("filters",draft);workspace.controls.sceneStats:Click()
-		assert.matches("12 results",main.popups[1].controls.count.label);main:ClosePopup()
+		assert.matches("13 results",main.popups[1].controls.count.label);main:ClosePopup()
+		workspace.controls.sceneKind.selFunc(nil,"Tiered gear");local details={}
+		for _,row in ipairs(workspace.controls.selection.list) do details[#details+1]=row[1] end
+		assert.matches("Unidentified item tier: 0",table.concat(details," "))
 	end)
 	it("distinguishes quoted numeric modifier names from counts when checking linked targets",function()
 		build.savers.CraftingProjects:Upsert(craft());local profile=filters.profile("filter","Filter");profile.rules=filters.generate(build,profile)

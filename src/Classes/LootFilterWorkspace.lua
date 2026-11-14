@@ -9,6 +9,9 @@ function M.dropOutcome(result)
 	local action=result and result.action
 	return (action=="Show" or action=="Hide" or action=="Minimal") and action or "Unknown"
 end
+local function itemTier(sample)
+	if sample.Identified==false and (sample.Rarity=="Magic" or sample.Rarity=="Rare") then return sample.UnidentifiedItemTier end
+end
 local function button(c,key,x,y,w,label,run) c[key]=new("ButtonControl"):ButtonControl(ui.anchor,{x,y,w,28},label,run);return c[key] end
 local function identifier() return "filter-"..require("sha1")(os.time()..tostring({})):sub(1,20) end
 function M.Open(build,source,layout,controller)
@@ -28,7 +31,7 @@ function M.Open(build,source,layout,controller)
 	local function sampleDetails(sample,evaluated)
 		local deciding=evaluated and (evaluated.ruleTitle or (evaluated.line and "Filter line "..evaluated.line or evaluated.status=="matched" and "No matching block: default Show" or "Resolve missing properties or filter errors.")) or "Select a drop to inspect the rule."
 		local lines={sample.BaseType or "Unknown base","iLvl "..tostring(sample.ItemLevel or "?").." / area "..tostring(sample.AreaLevel or "?"),evaluated and evaluated.action or "Choose a drop",deciding}
-		if sample.Identified==false and sample.UnidentifiedItemTier~=nil then lines[#lines+1]="Unidentified item tier: "..sample.UnidentifiedItemTier end
+		local tier=itemTier(sample);if tier~=nil then lines[#lines+1]="Unidentified item tier: "..tier end
 		for _,reason in ipairs(evaluated and evaluated.reasons or {}) do lines[#lines+1]=reason end;return lines
 	end
 	local history=require("Modules.PlanningHistory").new(data,state.history);local tierView;local tierState=state.tierState
@@ -340,7 +343,7 @@ function M.Open(build,source,layout,controller)
 				local evaluated=parsed and parser.simulate(parsed,drop) or {action="Unknown",status="unknown",styles={},reasons={"Filter is unavailable."}}
 				local action=M.dropOutcome(evaluated)
 				counts[action]=counts[action]+1
-				local tier=drop.Identified==false and drop.UnidentifiedItemTier~=nil and (drop.UnidentifiedItemTier==0 and " (no tier)" or " (tier "..drop.UnidentifiedItemTier..")") or ""
+				local value=itemTier(drop);local tier=value~=nil and (value==0 and " (no tier)" or " (tier "..value..")") or ""
 				entries[#entries+1]={id=index,label=(drop.BaseType or "Unknown item")..tier.." - "..action,category=action,details=sampleDetails(drop,evaluated),sample=drop}
 			end
 			local title=string.format("Examples: %d shown, %d minimal, %d hidden, %d unknown",counts.Show,counts.Minimal,counts.Hide,counts.Unknown)

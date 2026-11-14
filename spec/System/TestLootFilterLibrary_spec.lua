@@ -7,14 +7,16 @@ describe("Visual filter catalogue",function()
 	it("offers reproducible card and essence examples for testing filter rules",function()
 		local profile=filters.profile("test","Test")
 		for _,case in ipairs({{kind="Divination cards",class="Divination Cards",base="The Doctor",count=12},
-			{kind="Essences",class="Stackable Currency",base="Essence of Horror",count=11}}) do
+			{kind="Essences",class="Stackable Currency",base="Essence of Horror",count=12}}) do
 			local scene=library.scene(profile,build,case.kind,0,76,81);assert.equal(case.count,#scene)
 			local rule=parser.parse('Show\n Class == "'..case.class..'"\n BaseType == "'..case.base..'"\nHide')
-			local found=0;for _,item in ipairs(scene) do
+			local found=0;local names={};for _,item in ipairs(scene) do
+				names[item.BaseType]=true
 				assert.equal(case.class,item.Class);assert.equal(76,item.AreaLevel);assert.equal(81,item.ItemLevel)
 				if parser.simulate(rule,item).action=="Show" then assert.equal(case.base,item.BaseType);found=found+1 end
 			end
 			assert.equal(1,found)
+			if case.kind=="Essences" then assert.is_true(names["Essence of Trickery"]) end
 			local rotated=library.scene(profile,build,case.kind,1,76,81);assert.equal(scene[2].BaseType,rotated[1].BaseType)
 			assert.same(rotated,library.scene(profile,build,case.kind,1,76,81))
 		end

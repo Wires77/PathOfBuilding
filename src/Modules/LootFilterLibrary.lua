@@ -168,7 +168,7 @@ local essenceExamples={
 	{"Screaming Essence of Greed","Stackable Currency"},{"Shrieking Essence of Greed","Stackable Currency"},
 	{"Essence of Horror","Stackable Currency"},{"Essence of Delirium","Stackable Currency"},
 	{"Essence of Insanity","Stackable Currency"},{"Essence of Hysteria","Stackable Currency"},
-	{"Remnant of Corruption","Stackable Currency"},
+	{"Essence of Trickery","Stackable Currency"},{"Remnant of Corruption","Stackable Currency"},
 }
 function M.scene(profile,build,kind,seed,area,itemLevel,targetRules)
 	local list={}
