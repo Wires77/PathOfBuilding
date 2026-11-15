@@ -36,6 +36,23 @@ describe("Imported corruption identities",function()
 		assert.is_false(require("Modules.CraftingAvailability").check("locus",unknown,unresolved))
 		assert.is_false(pcall(sim.action,unresolved,unknown,{method="locus"},function() return 0 end))
 	end)
+	it("colours one white socket with a Vaal Orb and all white sockets with the Locus",function()
+		local model=sim.model(raw)
+		local state=copyTable(model.initial)
+		state.sockets={{color="W",group=0},{color="B",group=0},{color="W",group=1},{color="W",group=1}}
+		local function roll()
+			local first=true;return function() if first then first=false;return 0.3 end;return 0 end
+		end
+		local vaal=sim.action(model,state,{method="vaal"},roll())
+		assert.same({{color="R",group=0},{color="B",group=0},{color="W",group=1},{color="W",group=1}},vaal.sockets)
+		assert.is_true(vaal.corrupted);assert.same(state.sockets,sim.model(sim.toItem(model,state).raw).initial.sockets)
+		local corrupted=copyTable(state);corrupted.corrupted=true
+		local locus=sim.action(model,corrupted,{method="locus"},roll())
+		assert.same({{color="R",group=0},{color="B",group=0},{color="R",group=1},{color="R",group=1}},locus.sockets)
+		assert.is_true(locus.twiceCorrupted);assert.same(locus.sockets,sim.model(sim.toItem(model,locus).raw).initial.sockets)
+		local noWhite=copyTable(state);for _,socket in ipairs(noWhite.sockets) do socket.color="G" end
+		assert.same(noWhite.sockets,sim.action(model,noWhite,{method="vaal"},roll()).sockets)
+	end)
 	it("uses 3.30 maximum-charge weights on rings without changing other bases",function()
 		local ids={"V2MaxPowerChargesCorrupted","V2MaxFrenzyChargesCorrupted","V2MaximumEnduranceChargesCorruption"}
 		local function weight(base,id)

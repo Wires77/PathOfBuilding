@@ -131,8 +131,12 @@ function C.extend(M,A,api)
 			elseif outcome == 1 then
 				local white={};for i,socket in ipairs(state.sockets or {}) do if socket.color == "W" then white[#white+1]=i end end
 				if #white > 0 then
-					local forced=white[math.floor(random()*#white)+1]
-					for _,i in ipairs(white) do if method == "locus" or i == forced or random() < 0.1 then state.sockets[i].color=({"R","G","B"})[math.floor(random()*3)+1] end end
+					if method == "vaal" then
+						local selected=white[math.floor(random()*#white)+1]
+						state.sockets[selected].color=({"R","G","B"})[math.floor(random()*3)+1]
+					else
+						for _,i in ipairs(white) do state.sockets[i].color=({"R","G","B"})[math.floor(random()*3)+1] end
+					end
 				end
 			elseif outcome == 2 and method ~= "locus" then
 				-- Keep fractures and metamod-protected affixes on the rare reroll.
