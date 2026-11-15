@@ -28,6 +28,19 @@ test('queues reviewed crafting removals with closed project-ID validation', t =>
   }
 });
 
+test('accepts 3.30 crafting state markers without opening the schema', t => {
+  const f=fixture(t), itemText='Rarity: NORMAL\nIron Hat\nItem Level: 86';
+  const initialState={rarity:'RARE',affixes:[{id:'AttackCastSpeedPerNearbyEnemyEssence1',range:0.5,description330:true}],corrupted:true,corruptedImplicits:[{id:'V2SupportedByLifeGainOnHitCorrupted',range:0.5,corruption330:true}]};
+  const args={baseRevision:f.state.revision,itemText,initialState,action:{method:'tainted_chromatic'}};
+  f.call('apply_crafting_action',args);
+  const request=JSON.parse(fs.readFileSync(path.join(f.dir,'AI-build-request.json')));assert.deepEqual(request.initialState,initialState);
+  for(const invalid of [
+    {...initialState,affixes:[{...initialState.affixes[0],description330:'yes'}]},
+    {...initialState,corruptedImplicits:[{...initialState.corruptedImplicits[0],corruption330:false}]},
+    {...initialState,corruptedImplicits:[{...initialState.corruptedImplicits[0],unexpected:true}]}
+  ]) assert.throws(()=>f.call('apply_crafting_action',{...args,initialState:invalid}),/arguments/);
+});
+
 test('queues loot-filter generation, evaluation and reviewed profiles without writing exports', t => {
   const f=fixture(t);const profile={id:'maps',title:'Map pickups',preset:'early_maps',strictness:2,rules:[{id:'base',title:'Craft base',text:'Show\n BaseType == "Iron Hat"',enabled:true}]};
   const filters={schemaVersion:1,activeId:'maps',profiles:[profile]};f.captured.context.lootFilters=filters;f.write('context',f.captured);

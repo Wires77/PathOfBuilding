@@ -220,6 +220,18 @@ async function main(){
   assert.ok(implicitAction.nativeCrafting.state.corruptedImplicits.some(entry=>entry.id===implicitTarget.anyOf[0]));
   const implicitOdds=await queued('calculate_crafting',{baseRevision:context.revision,itemText:implicitRaw,action:{method:'tainted_chromatic'},targets:[implicitTarget],options:{trials:10}},'crafted');
   assert.equal(implicitOdds.nativeCrafting.successChance,100);
+  const supportRaw='Rarity: NORMAL\nEzomyte Axe\nItem Level: 86\nSockets: W W W\nImplicits: 1\nSocketed Gems are Supported by Level 15 Life Gain On Hit\nCorrupted';
+  const supportItem=await queued('inspect_crafting_item',{baseRevision:context.revision,itemText:supportRaw,limit:1},'inspected');
+  const supportState=supportItem.crafting.nativeEngine.initialState;
+  assert.equal(supportState.corruptedImplicits[0].corruption330,true);
+  const continuedSupport=await queued('apply_crafting_action',{baseRevision:context.revision,itemText:supportRaw,initialState:supportState,action:{method:'tainted_chromatic'},seed:1},'crafted');
+  assert.equal(continuedSupport.nativeCrafting.state.corruptedImplicits[0].corruption330,true);
+  assert.ok(continuedSupport.nativeCrafting.itemText.includes('Level 15 Life Gain On Hit'));
+  const desolationRaw='Rarity: NORMAL\nIron Gauntlets\nItem Level: 86';
+  const desolation=await queued('apply_crafting_action',{baseRevision:context.revision,itemText:desolationRaw,action:{method:'essence',essenceId:'Metadata/Items/Currency/CurrencyEssenceFaridun1'},seed:42},'crafted');
+  assert.ok(desolation.nativeCrafting.state.affixes.some(entry=>entry.description330===true));
+  const continuedDesolation=await queued('apply_crafting_action',{baseRevision:context.revision,itemText:desolationRaw,initialState:desolation.nativeCrafting.state,action:{method:'divine'},seed:1},'crafted');
+  assert.ok(continuedDesolation.nativeCrafting.itemText.includes('within 6 metres'));
   const rgbPlan=await queued('simulate_crafting',{baseRevision:context.revision,itemText:bodyRaw,recipe:{steps:[rgbService.action,linkAction],targets:[],requirements:{socketColours:'RGB',linkedColours:true,links:6}},options:{trials:4,maxActions:2,currency:'chaos',prices:{'Metadata/Items/Currency/AncestralOmenOnChromaticAddWhiteSockets':2,'Metadata/Items/Currency/CurrencyRerollSocketColours':0.5,'Metadata/Items/Currency/AncestralOmenOnFusingMakeFullLinks':2,'Metadata/Items/Currency/CurrencyRerollSocketLinks':0.25}}},'crafted');
   assert.equal(rgbPlan.nativeCrafting.successes,4);assert.equal(rgbPlan.nativeCrafting.meanCost,4.75);assert.equal(rgbPlan.nativeCrafting.resourceUsage.length,4);
   assert.ok(rgbPlan.nativeCrafting.resourceUsage.every(entry=>entry.amount===4));
