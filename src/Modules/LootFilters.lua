@@ -103,14 +103,17 @@ function M.generate(build,profile,checkpoint)
 		local slot=group.slot and build.itemsTab.slots[group.slot]
 		local activeWeaponSet=build.itemsTab.activeItemSet.useSecondWeaponSet and 2 or 1
 		if group.enabled~=false and (not slot or not slot.weaponSet or slot.weaponSet==activeWeaponSet) then
-			local colours={}
+			local socketCount=0
 			for j,gem in ipairs(group.gemList) do if gem.enabled~=false and gem.nameSpec and gem.nameSpec~="" then
-				add("gem-"..i.."-"..j,gem.nameSpec,{"Class == \"Skill Gems\" \"Support Gems\"","BaseType == "..quote(gem.nameSpec)},"gems")
+				local name=gem.nameSpec
+				if gem.gemData and gem.gemData.tags and gem.gemData.tags.support and not name:match(" Support$") then name=name.." Support" end
+				add("gem-"..i.."-"..j,gem.nameSpec,{"Class == \"Skill Gems\" \"Support Gems\"","BaseType == "..quote(name)},"gems")
 				local data=gem.grantedEffect or gem.gemData and gem.gemData.grantedEffect;local color=data and data.color;if type(color)=="number" then color=({"R","G","B","W"})[color] end
-				if color=="R" or color=="G" or color=="B" or color=="W" then colours[#colours+1]=color end
+				if color=="R" or color=="G" or color=="B" or color=="W" then socketCount=socketCount+1 end
 			end end
-			if #colours>=2 and #colours<=6 and profile.preset=="campaign" then
-				add("links-"..i,"Links for skill group "..i,{"SocketGroup "..table.concat(colours),"Rarity <= Rare"},"gems")
+			if socketCount>=2 and socketCount<=6 and profile.preset=="campaign" then
+				-- Since 3.29, any ordinary socket can hold any gem colour.
+				add("links-"..i,"Links for skill group "..i,{"LinkedSockets >= "..socketCount,"Rarity <= Rare"},"gems")
 			end
 		end
 	end

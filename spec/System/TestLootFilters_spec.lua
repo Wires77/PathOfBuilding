@@ -313,14 +313,26 @@ describe("Build-owned loot filters",function()
 	it("generates gem rules only for enabled groups in the active weapon set",function()
 		local original=build.skillsTab.socketGroupList
 		build.skillsTab.socketGroupList={
-			{enabled=true,slot="Weapon 1",gemList={{nameSpec="Fireball",enabled=true,grantedEffect={color="R"}},{nameSpec="Added Fire Damage Support",enabled=true,grantedEffect={color="R"}}}},
+			{enabled=true,slot="Weapon 1",gemList={{nameSpec="Fireball",enabled=true,grantedEffect={color="R"}},{nameSpec="Added Fire Damage",enabled=true,grantedEffect={color="R"},gemData={tags={support=true}}}}},
 			{enabled=false,gemList={{nameSpec="Ice Nova",enabled=true}}},
 			{enabled=true,slot="Weapon 1 Swap",gemList={{nameSpec="Arc",enabled=true}}},
 			{enabled=true,gemList={{nameSpec="Spark",enabled=false}}},
 		}
 		local profile=filters.profile("active-gems","Active gems","campaign")
-		local rules=filters.generate(build,profile);local titles={};for _,rule in ipairs(rules) do titles[rule.title]=true end
+		local rules=filters.generate(build,profile);local titles,link,support={};for _,rule in ipairs(rules) do titles[rule.title]=true;if rule.title=="Links for skill group 1" then link=rule elseif rule.title=="Added Fire Damage" then support=rule end end
 		assert.is_true(titles.Fireball);assert.is_true(titles["Links for skill group 1"])
+		assert.is_truthy(support.text:find('BaseType == "Added Fire Damage Support"',1,true))
+		assert.equal("Show",parser.simulate(parser.parse(support.text.."\nHide"),{Class="Support Gems",BaseType="Added Fire Damage Support"}).action)
+		assert.equal("Hide",parser.simulate(parser.parse(support.text.."\nHide"),{Class="Support Gems",BaseType="Added Fire Damage"}).action)
+		assert.is_truthy(link.text:find("LinkedSockets >= 2",1,true));assert.is_nil(link.text:find("SocketGroup",1,true))
+		local generated=parser.parse(link.text.."\nHide")
+		assert.equal("Show",parser.simulate(generated,{Rarity="Normal",LinkedSockets=2,SocketGroup="WW"}).action)
+		assert.equal("Show",parser.simulate(generated,{Rarity="Rare",LinkedSockets=3,SocketGroup="RGB"}).action)
+		assert.equal("Hide",parser.simulate(generated,{Rarity="Normal",LinkedSockets=1,SocketGroup="W W"}).action)
+		assert.equal("Hide",parser.simulate(generated,{Rarity="Unique",LinkedSockets=2,SocketGroup="WW"}).action)
+		build.skillsTab.socketGroupList[1].gemList[#build.skillsTab.socketGroupList[1].gemList+1]={nameSpec="Barrage Support",enabled=true,grantedEffect={color="G"},gemData={tags={support=true}}}
+		local barrage;for _,rule in ipairs(filters.generate(build,profile)) do if rule.title=="Barrage Support" then barrage=rule end end
+		assert.is_truthy(barrage.text:find('BaseType == "Barrage Support"',1,true));assert.is_nil(barrage.text:find("Support Support",1,true))
 		assert.is_nil(titles["Ice Nova"]);assert.is_nil(titles.Arc);assert.is_nil(titles.Spark)
 		build.itemsTab.activeItemSet.useSecondWeaponSet=true
 		rules=filters.generate(build,profile);titles={};for _,rule in ipairs(rules) do titles[rule.title]=true end

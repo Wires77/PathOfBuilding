@@ -442,6 +442,13 @@ async function main(){
   const oldTreeSimulation=await queued('simulate_crafting',{baseRevision:context.revision,itemText:raw,recipe:{steps:[{method:'alchemy'}],targets:[],requirements:{minAffixes:1}},options:{trials:1,maxActions:1}},'crafted');
   assert.equal(oldTreeSimulation.nativeCrafting.treeVersion,'3_29');assert.equal(oldTreeSimulation.nativeCrafting.treeVersionScope,'build_context_only');assert.notEqual(oldTreeSimulation.nativeCrafting.latestAvailableTreeVersion,'3_29');assert.equal(oldTreeSimulation.nativeCrafting.dataPatch,oldTreeInspection.crafting.nativeEngine.dataPatch);
   const oldTreeOdds=await queued('calculate_crafting',{baseRevision:context.revision,itemText:raw,action:{method:'socket_bench',count:2},targets:[],options:{requirements:{sockets:2}}},'crafted');assert.equal(oldTreeOdds.nativeCrafting.treeVersion,'3_29');
+  await queued('propose_build',{mode:'edit',title:'Campaign skill links',baseRevision:context.revision,operations:[{type:'set_skills',groups:[{slot:'Helmet',gems:[{name:'Fireball'},{name:'Added Fire Damage'}]}]}]},'review');
+  await host('apply');context=(await call('get_build_context')).context;
+  const campaign=await queued('generate_loot_filter',{baseRevision:context.revision,profile:{id:'campaign-links',title:'Campaign links',preset:'campaign',strictness:2,rules:[]}},'generated');
+  const linkRule=campaign.profile.rules.find(rule=>rule.title==='Links for skill group 1');assert.ok(linkRule);assert.match(linkRule.text,/LinkedSockets >= 2/);
+  const supportRule=campaign.profile.rules.find(rule=>rule.title==='Added Fire Damage');assert.ok(supportRule);assert.match(supportRule.text,/BaseType == "Added Fire Damage Support"/);
+  const whiteLink=await queued('test_loot_filter',{baseRevision:context.revision,profile:campaign.profile,sample:{BaseType:'Crude Bow',Rarity:'Normal',LinkedSockets:2,SocketGroup:'WW'}},'tested');
+  assert.equal(whiteLink.result.action,'Show');assert.equal(whiteLink.result.ruleTitle,'Links for skill group 1 [gems]');
   await host('quit');
   console.log('PLANNING_WORKFLOW_OK: real MCP stdio, native calculations, UI review, crafting simulation, Journey ranking, Atlas strategy, save/reopen, checkpoint undo and portable bundle import');
 }
