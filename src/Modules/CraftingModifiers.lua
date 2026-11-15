@@ -24,7 +24,7 @@ function M.catalog(model)
 	for _,entry in ipairs(model.influencePool or {}) do add(entry.id,entry.mod,"Influence",entry.weight) end
 	for _,entry in ipairs(model.bench) do add(entry.id,entry.mod,"Bench") end
 	for _,entry in ipairs(model.essences) do add(entry.modId,model.descriptions330[entry.modId] or model.byId[entry.modId],"Essence") end
-	for id in pairs(model.special or {}) do add(id,model.byId[id],"Special") end
+	for id in pairs(model.special or {}) do add(id,(model.corruptions330 or {})[id] or model.byId[id],"Special") end
 	local families={}
 	for _,row in ipairs(rows) do if row.source=="Natural" or row.source=="Influence" then local key=row.type..":"..table.concat(row.groups,":")..":"..row.source;row.family=key;families[key]=families[key] or {};families[key][row.level]=true end end
 	local ranks={};for key,levels in pairs(families) do local ordered={};for level in pairs(levels) do ordered[#ordered+1]=level end;table.sort(ordered,function(a,b) return a>b end);ranks[key]={};for rank,level in ipairs(ordered) do ranks[key][level]=rank end end

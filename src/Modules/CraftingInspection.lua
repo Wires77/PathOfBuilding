@@ -3,7 +3,7 @@ local sim=require("Modules.CraftingSimulator")
 local M={}
 local lightRadius330=require("Modules.CraftingLightRadius330").ranges
 function M.modDetails(model,id,entry)
-	local mod=assert(entry and sim.entryMod(model,entry) or model.byId[id],"Unknown modifier")
+	local mod=assert(entry and sim.entryMod(model,entry) or (model.corruptions330 or {})[id] or model.byId[id],"Unknown modifier")
 	local lines={mod.type.." | "..(mod.affix or "Modifier"),"Required item level: "..(mod.level or 0)}
 	-- Rank only comparable, eligible ordinary tiers. Special modifiers keep their names.
 	local levels={};local group=mod.group

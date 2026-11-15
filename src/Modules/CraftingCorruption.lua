@@ -2,6 +2,7 @@ local C={}
 -- Client 3.30.0.1.4 lowers these three ring weights; other bases retain
 -- their original weights. The remaining corruption data is pinned to 3.29.
 local ringChargeWeights330={V2MaxPowerChargesCorrupted=50,V2MaxFrenzyChargesCorrupted=50,V2MaximumEnduranceChargesCorruption=50}
+local lifeGainOnHit330="V2SupportedByLifeGainOnHitCorrupted"
 function C.extend(M,A,api)
 	local labels={vaal="Vaal Orb",locus="Locus of Corruption",tainted_exalt="Tainted Exalted Orb",tainted_chaos="Tainted Chaos Orb"}
 	for method,label in pairs(labels) do M.methods[#M.methods+1]=method;M.labels[method]=label end;table.sort(M.methods)
@@ -31,6 +32,14 @@ function C.extend(M,A,api)
 	end
 	function M.model(raw)
 		local model=originalModel(raw)
+		model.corruptions330={}
+		local old=model.byId[lifeGainOnHit330]
+		if old then
+			local mod=copyTable(old)
+			assert(mod[1]=="Socketed Gems are Supported by Level 10 Life Gain On Hit","Unexpected Life Gain on Hit corruption data")
+			mod[1]="Socketed Gems are Supported by Level 15 Life Gain On Hit"
+			model.corruptions330[lifeGainOnHit330]=mod
+		end
 		model.initial.twiceCorrupted=model.item.twiceCorrupted or nil
 		model.corruptions={}
 		for id,mod in pairs(data.itemMods.Corrupted) do if mod.level <= model.item.itemLevel and weight(model,id) > 0 then
@@ -53,7 +62,7 @@ function C.extend(M,A,api)
 			assert(total > 0,"No current corruption implicit is available for this base")
 			local pick=random()*total;local id
 			for _,entry in ipairs(eligible) do pick=pick-entry.weight;if pick < 0 then id=entry.id;break end end
-			chosen[#chosen+1]={id=assert(id),range=M.rollRange(model.byId[id],random)}
+			chosen[#chosen+1]={id=assert(id),range=M.rollRange(model.byId[id],random),corruption330=model.corruptions330[id] and true or nil}
 			for _,group in ipairs(A.data().mods[id].groups) do groups[group]=true end
 		end
 		state.corruptedImplicits=chosen
@@ -68,7 +77,7 @@ function C.extend(M,A,api)
 		item.twiceCorrupted=twice or nil
 		if state.corruptedImplicits then
 			item.implicitModLines={}
-			for _,entry in ipairs(state.corruptedImplicits) do for _,line in ipairs(M.rolledLines(model.byId[entry.id],entry.range)) do item.implicitModLines[#item.implicitModLines+1]={line=line} end end
+			for _,entry in ipairs(state.corruptedImplicits) do for _,line in ipairs(M.rolledLines(M.entryMod(model,entry),entry.range)) do item.implicitModLines[#item.implicitModLines+1]={line=line} end end
 		end
 	end
 	function M.validateState(model,state)
@@ -88,6 +97,7 @@ function C.extend(M,A,api)
 			local groups={}
 			for _,entry in ipairs(state.corruptedImplicits) do
 				assert(data.itemMods.Corrupted[entry.id] and weight(model,entry.id) > 0,"Invalid corruption implicit for this base")
+				assert(entry.corruption330==nil or (entry.corruption330==true and model.corruptions330[entry.id]),"Invalid 3.30 corruption modifier")
 				for _,group in ipairs(A.data().mods[entry.id].groups) do assert(not groups[group],"Conflicting corrupted implicits");groups[group]=true end
 				local ranges=type(entry.range) == "table" and entry.range or {entry.range};assert(#ranges >= 1 and #ranges <= 20,"Invalid corruption range count")
 				for _,range in ipairs(ranges) do assert(type(range) == "number" and range >= 0 and range <= 1,"Invalid corruption roll") end

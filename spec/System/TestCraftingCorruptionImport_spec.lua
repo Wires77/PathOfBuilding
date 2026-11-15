@@ -54,6 +54,27 @@ describe("Imported corruption identities",function()
 		local state=copyTable(model.initial);sim.rollCorrupted(model,state,random,2)
 		assert.equal(ids[1],state.corruptedImplicits[1].id);assert.equal(2,#state.corruptedImplicits)
 	end)
+	it("rolls the 3.30 Life Gain on Hit support while preserving legacy corruptions",function()
+		local raw="Rarity: NORMAL\nEzomyte Axe\nItem Level: 86"
+		local id="V2SupportedByLifeGainOnHitCorrupted"
+		local model=sim.model(raw);local before,total=0,0
+		local row;for _,candidate in ipairs(require("Modules.CraftingModifiers").catalog(model)) do if candidate.id==id then row=candidate end end
+		assert.matches("Level 15 Life Gain On Hit",assert(row).text)
+		local details=require("Modules.CraftingInspection").modDetails(model,id);assert.matches("Level 15 Life Gain On Hit",table.concat(details," "))
+		for _,entry in ipairs(model.corruptions) do if entry.id==id then before=total end;total=total+entry.weight end
+		local first=true;local function random() if first then first=false;return (before+1)/total end;return 0 end
+		local state=copyTable(model.initial);sim.rollCorrupted(model,state,random,1)
+		assert.equal(id,state.corruptedImplicits[1].id);assert.is_true(state.corruptedImplicits[1].corruption330)
+		local text=sim.toItem(model,state).raw;assert.matches("Level 15 Life Gain On Hit",text)
+		local parsed,extra=modLib.parseMod("Socketed Gems are Supported by Level 15 Life Gain On Hit")
+		assert.is_nil(extra);assert.equal("ExtraSupport",parsed[1].name);assert.equal(15,parsed[1].value.level);assert.equal("SupportLifeGainOnHit",parsed[1].value.skillId)
+		local reopened=sim.model(text);assert.same(state.corruptedImplicits,reopened.initial.corruptedImplicits)
+		local legacy=copyTable(state);legacy.corruptedImplicits[1].corruption330=nil
+		local oldText=sim.toItem(model,legacy).raw;assert.matches("Level 10 Life Gain On Hit",oldText)
+		local old=sim.model(oldText);assert.same(legacy.corruptedImplicits,old.initial.corruptedImplicits)
+		local invalid=copyTable(state);invalid.corruptedImplicits[1].corruption330="yes"
+		assert.is_false(pcall(sim.validateState,model,invalid))
+	end)
 	it("recovers one and two native implicits and preserves them through tainted crafting",function()
 		local model=sim.model(raw)
 		for count=1,2 do

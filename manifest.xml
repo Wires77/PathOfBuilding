@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <PoBVersion>
-	<Version number="2.67.2-ai.preview177" />
+	<Version number="2.67.2-ai.preview178" />
 	<Source part="default" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/" />
 	<Source part="runtime" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/runtime/" platform="win32" />
 	<Source part="program" url="https://raw.githubusercontent.com/nexus671/PathOfBuilding-AI-Edition/{branch}/src/" />
@@ -1493,20 +1493,20 @@
 	<File name="Modules/CraftingCalculator.lua" part="program" sha1="ec863b01cd2ffba8dc03f27c89a558fef47eb012" />
 	<File name="Modules/CraftingChartData.lua" part="program" sha1="fffe2d9267fac92af038cbb25cd711faee3781b2" />
 	<File name="Modules/CraftingCheckpoint.lua" part="program" sha1="e4858e54dd718de8cc5d3be4f5f8e2872c93735e" />
-	<File name="Modules/CraftingCorruption.lua" part="program" sha1="8d81182281a6ef163b2867fa24e26ec2c3ff6d59" />
-	<File name="Modules/CraftingCorruptionImport.lua" part="program" sha1="a4eee4726739b4a199f0314a6e84ef3de0183d34" />
+	<File name="Modules/CraftingCorruption.lua" part="program" sha1="86ee2d9f36a0d436dcfaaf4c24e31bd5f2397663" />
+	<File name="Modules/CraftingCorruptionImport.lua" part="program" sha1="2911a1fd726d74c22412ab77e1b0379275e6b43b" />
 	<File name="Modules/CraftingDescriptions330.lua" part="program" sha1="21ab8530d2005e8f1a47829cd995c786642a0a03" />
 	<File name="Modules/CraftingDesolation330.lua" part="program" sha1="c5274eb90fccc51fbdae63894c11d9ff8a3598a1" />
 	<File name="Modules/CraftingEnchants.lua" part="program" sha1="530d69607de5818c37823762938dba0e39158a49" />
 	<File name="Modules/CraftingFossilResults.lua" part="program" sha1="484afaf696ec7915f1dc175badfa7fa60d718b83" />
 	<File name="Modules/CraftingImport.lua" part="program" sha1="dadce7c0d8f2b28be0d485421c59bb7cb5f8cb3b" />
-	<File name="Modules/CraftingInspection.lua" part="program" sha1="f37a9c25d43ff013bfe14b7f60fe78d52233dc6d" />
+	<File name="Modules/CraftingInspection.lua" part="program" sha1="888220e857fc88ceda80fb61a6bf2e1e205b1860" />
 	<File name="Modules/CraftingInventory.lua" part="program" sha1="d273ecaae81f4d7a81d65a91ad8e6619a13c0795" />
 	<File name="Modules/CraftingItemStats.lua" part="program" sha1="9311b1009123eed0600491248a5bccd0bff34343" />
 	<File name="Modules/CraftingLeague.lua" part="program" sha1="947365404de9f6008b564714a88967a3a2f3de5d" />
 	<File name="Modules/CraftingLightRadius330.lua" part="program" sha1="7fa9ebd4efce1f060c946ef44af0e35cb6ad065c" />
 	<File name="Modules/CraftingMemory.lua" part="program" sha1="57763bb0f5960fa2954977b6b535160d73c0a14a" />
-	<File name="Modules/CraftingModifiers.lua" part="program" sha1="6468ec93cabc5e8374efccd6c7899c7eb48ccc9f" />
+	<File name="Modules/CraftingModifiers.lua" part="program" sha1="4fbd487218eb70c47b2839740c9a5eb5788305b4" />
 	<File name="Modules/CraftingPalette.lua" part="program" sha1="edd27dc9231769e2c5035238bc2e6aa1a5df5de6" />
 	<File name="Modules/CraftingPredictable.lua" part="program" sha1="96bf14e9645edc1a52dcb4baec013afc37c91131" />
 	<File name="Modules/CraftingPrices.lua" part="program" sha1="2afd370a6d9995396ad9a26fda93e244a548e912" />
@@ -1514,7 +1514,7 @@
 	<File name="Modules/CraftingProperties.lua" part="program" sha1="ae12f7c969947c17178f08a1876b227acfaa5371" />
 	<File name="Modules/CraftingRecombination.lua" part="program" sha1="c311ee26dbe82f9dbfda0539fee985ff02b2dcd3" />
 	<File name="Modules/CraftingRoutes.lua" part="program" sha1="85fb2b73b56457836bdb630f3789126f00668589" />
-	<File name="Modules/CraftingSimulator.lua" part="program" sha1="5afd306d65968c973d35b01db3a7c31c38da5ef5" />
+	<File name="Modules/CraftingSimulator.lua" part="program" sha1="087dbdbdea9da44860b392f49bf5170c630a4c53" />
 	<File name="Modules/CraftingSockets.lua" part="program" sha1="2637a36da3f83e50d77a0fdc9ad1b3f132c28aaf" />
 	<File name="Modules/CraftingTasks.lua" part="program" sha1="4cf20e586cf547c310d4bb5c715a817d13099fa3" />
 	<File name="Modules/CraftingUnveiledJewel330.lua" part="program" sha1="5b05b7293ddad3c073f1cb82ab53932899f739c0" />

@@ -115,7 +115,7 @@ end
 -- Use the native renderer so every preview retains the same independent rolls.
 function M.rolledLines(mod,range) return itemLib.applyModRanges(mod,range) end
 function M.entryMod(model,entry)
-	return entry.legacyLightRadius and assert(model.legacyLightRadius[entry.id],"Unknown legacy Light Radius modifier") or entry.description330 and assert(model.descriptions330[entry.id],"Unknown 3.30 modifier description") or model.byId[entry.id]
+	return entry.legacyLightRadius and assert(model.legacyLightRadius[entry.id],"Unknown legacy Light Radius modifier") or entry.description330 and assert(model.descriptions330[entry.id],"Unknown 3.30 modifier description") or entry.corruption330 and assert(model.corruptions330[entry.id],"Unknown 3.30 corruption modifier") or model.byId[entry.id]
 end
 
 function M.toItem(model,state)

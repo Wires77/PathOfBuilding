@@ -22,14 +22,14 @@ function I.resolve(M,model,metadata)
 	end
 	local baseMatch=#base==#rows and matchesBase(1)
 	if work>10000 then return nil,"unresolved" end
-	local function consider(id)
-		local mod=model.byId[id];if #mod>#rows then return end
+	local function consider(id,mod,is330)
+		if #mod>#rows then return end
 		local selected,ranges={},{}
 		local function assign(index,exact)
 			work=work+1;if work>10000 then return end
 			if index>#mod then
 				local indices={};for i in pairs(selected) do indices[#indices+1]=i end
-				candidates[#candidates+1]={indices=indices,exact=exact,entry={id=id,range=#ranges==0 and 0.5 or #ranges==1 and ranges[1] or copyTable(ranges)}}
+				candidates[#candidates+1]={indices=indices,exact=exact,entry={id=id,range=#ranges==0 and 0.5 or #ranges==1 and ranges[1] or copyTable(ranges),corruption330=is330 or nil}}
 				return
 			end
 			for i,row in ipairs(rows) do if not selected[i] then
@@ -43,7 +43,11 @@ function I.resolve(M,model,metadata)
 		end
 		assign(1,0)
 	end
-	for _,entry in ipairs(model.corruptions) do consider(entry.id);if work>10000 then return nil,"unresolved" end end
+	for _,entry in ipairs(model.corruptions) do
+		consider(entry.id,model.byId[entry.id])
+		if model.corruptions330 and model.corruptions330[entry.id] then consider(entry.id,model.corruptions330[entry.id],true) end
+		if work>10000 then return nil,"unresolved" end
+	end
 	local used,groups,chosen,seen={},{},{},{}
 	local best,solutions=-1,{}
 	local function search(score)
