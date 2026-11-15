@@ -243,6 +243,33 @@ function M.simulate(profile,item)
 	for _,d in ipairs(report.diagnostics) do if d.error then return {status="invalid",action="Unknown",styles={},matches={},reasons={d.error}} end end
 	return parser.simulate(parsed,item)
 end
+-- Reuse one compiled filter for a page of saved examples. Offsets are zero-based
+-- so clients can page through a set without limiting the size of the saved set.
+function M.simulateExamples(profile,setId,offset,limit,checkpoint)
+	local selected;for _,entry in ipairs(profile.sampleSets or {}) do if entry.id==setId then selected=entry;break end end
+	assert(selected,"Choose a saved example set")
+	offset=offset or 0;limit=limit or 20
+	assert(type(offset)=="number" and offset==math.floor(offset) and offset>=0 and offset<=#selected.samples,"Invalid example offset")
+	assert(type(limit)=="number" and limit==math.floor(limit) and limit>=1 and limit<=50,"Use 1 to 50 examples per page")
+	local _,_,parsed=M.compile(profile,true);local results={};local last=math.min(#selected.samples,offset+limit)
+	for i=offset+1,last do
+		local sample=selected.samples[i]
+		local evaluated=parser.simulate(parsed,sample)
+		-- Keep a page bounded even when an imported filter has thousands of
+		-- Continue blocks or unusually long custom sound paths. The single-item
+		-- evaluator remains available for complete style details.
+		local summary={status=evaluated.status,action=evaluated.action,line=evaluated.line,ruleTitle=evaluated.ruleTitle and evaluated.ruleTitle:sub(1,160),matches={},reasons={}}
+		if evaluated.ruleTitle and #evaluated.ruleTitle>160 then summary.ruleTitleTruncated=true end
+		for n=1,math.min(#(evaluated.matches or {}),30) do summary.matches[n]=evaluated.matches[n] end
+		if #(evaluated.matches or {})>30 then summary.matchesTruncated=true end
+		for n=1,math.min(#(evaluated.reasons or {}),10) do local reason=tostring(evaluated.reasons[n]);summary.reasons[n]=reason:sub(1,240);if #reason>240 then summary.reasonsTruncated=true end end
+		if #(evaluated.reasons or {})>10 then summary.reasonsTruncated=true end
+		local baseType=type(sample.BaseType)=="string" and sample.BaseType:sub(1,240) or nil
+		results[#results+1]={index=i-1,baseType=baseType,baseTypeTruncated=baseType and #sample.BaseType>240 or nil,result=summary}
+		if checkpoint then checkpoint({completed=i-offset,total=last-offset}) end
+	end
+	return {setId=selected.id,title=selected.title,total=#selected.samples,offset=offset,nextOffset=last<#selected.samples and last or nil,results=results}
+end
 function M.update(profile)
 	local nextProfile=copyTable(profile);nextProfile.baseCommit=M.source().commit
 	return nextProfile,{previous=profile.baseCommit,current=nextProfile.baseCommit,personalRules=#profile.rules,imported=profile.template~=nil}

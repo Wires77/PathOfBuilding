@@ -534,13 +534,26 @@ function M.poll(build, force)
 			end)
 			M.status={id=request.id,status="calculating",kind="journeyUpgrades"};M.publishState();return
 		end
-		if request.kind=="generate_loot_filter" or request.kind=="test_loot_filter" or request.kind=="export_loot_filter" then
+		if request.kind=="generate_loot_filter" or request.kind=="test_loot_filter" or request.kind=="test_loot_filter_examples" or request.kind=="export_loot_filter" then
 			assert(request.baseRevision==M.revision(build),"Build changed. Refresh loot-filter context.")
 			local filters=require("Modules.LootFilters")
 			local profile=request.profile or filters.find(build.savers.LootFilters.data,request.profileId)
 			assert(profile,"Choose a loot-filter profile")
 			profile=filters.validate({schemaVersion=1,activeId=profile.id,profiles={profile}}).profiles[1]
-			if request.kind=="generate_loot_filter" then
+			if request.kind=="test_loot_filter_examples" then
+				local session=M.session
+				local function publish(status,values)
+					if not M.enabled or M.session~=session then return end
+					M.status={id=request.id,status=status,baseRevision=request.baseRevision}
+					for key,value in pairs(values) do M.status[key]=value end;M.publishState()
+				end
+				local job=require("Modules.CraftingTasks").start(build,function(checkpoint)
+					return filters.simulateExamples(profile,request.sampleSetId,request.offset,request.limit,checkpoint)
+				end,function(result)
+					if M.revision(build)~=request.baseRevision then publish("failed",{error="Build changed. Refresh loot-filter context."}) else publish("tested",{examples=result}) end
+				end,function(message) publish("failed",{error=message}) end,function(progress) publish("calculating",{progress=progress}) end,"Filter example evaluation slice")
+				job.requestId=request.id;publish("calculating",{});return
+			elseif request.kind=="generate_loot_filter" then
 				local rules,warnings=filters.generate(build,profile);profile.rules=rules;M.status={id=request.id,status="generated",profile=profile,warnings=warnings}
 			elseif request.kind=="test_loot_filter" then
 				assert(type(request.sample)=="table","Supply drop properties");M.status={id=request.id,status="tested",result=filters.simulate(profile,request.sample)}

@@ -377,6 +377,13 @@ async function main(){
   generated.profile.palettes=[{id:'gold',title:'Gold highlights',appearance:generated.profile.appearance,theme:'default',categoryStyles:generated.profile.categoryStyles}];
   assert.ok(generated.profile.rules.some(rule=>rule.origin==='craft:helmet'));
   const tested=await queued('test_loot_filter',{baseRevision:context.revision,profile:generated.profile,sample:{BaseType:'Iron Hat',Rarity:'Rare',ItemLevel:86}},'tested');assert.equal(tested.result.action,'Show');
+  const page=await queued('test_loot_filter_examples',{baseRevision:context.revision,profile:generated.profile,sampleSetId:'campaign-drop',offset:0,limit:1},'tested');
+  assert.equal(page.examples.total,1);assert.equal(page.examples.results[0].index,0);assert.equal(page.examples.results[0].baseType,'Iron Hat');assert.equal(page.examples.nextOffset,undefined);
+  const sampleProfile={...generated.profile,sampleSets:[{id:'mixed',title:'Mixed',samples:[{BaseType:'Iron Hat'},{BaseType:'Iron Ring'},{BaseType:'Iron Hat'}]}]};
+  const firstPage=await queued('test_loot_filter_examples',{baseRevision:context.revision,profile:sampleProfile,sampleSetId:'mixed',limit:2},'tested');
+  assert.equal(firstPage.examples.nextOffset,2);assert.deepEqual(firstPage.examples.results.map(entry=>entry.index),[0,1]);
+  const lastPage=await queued('test_loot_filter_examples',{baseRevision:context.revision,profile:sampleProfile,sampleSetId:'mixed',offset:firstPage.examples.nextOffset,limit:2},'tested');
+  assert.deepEqual(lastPage.examples.results.map(entry=>entry.index),[2]);assert.equal(lastPage.examples.nextOffset,undefined);
   const socketProfile={id:'socket-rules',title:'Socket comparisons',preset:'early_maps',strictness:2,rules:[{id:'socket-rule',title:'Socket rule',enabled:true,text:'Hide\n SocketGroup > 5GGG'}]};
   const twiceFilter={...socketProfile,rules:[{...socketProfile.rules[0],text:'Hide\n TwiceCorrupted True'}]};
   const twiceDrop=await queued('test_loot_filter',{baseRevision:context.revision,profile:twiceFilter,sample:{BaseType:'Iron Hat',Rarity:'Rare',TwiceCorrupted:true}},'tested');assert.equal(twiceDrop.result.action,'Hide');
@@ -404,6 +411,10 @@ async function main(){
   assert.ok(exported.filter.includes('# PoB rule: Campaign /'));assert.ok(exported.filter.includes('Crude Bow'));
   await queued('propose_loot_filters',{title:'Keep pickup plan',baseRevision:context.revision,filters:{schemaVersion:1,activeId:'mapping',profiles:[generated.profile]}},'review');await host('apply');context=(await call('get_build_context')).context;
   const savedFilters=await call('get_loot_filters');assert.equal(savedFilters.filters.profiles.length,1);
+  const savedPage=await queued('test_loot_filter_examples',{baseRevision:context.revision,profileId:'mapping',sampleSetId:'campaign-drop'},'tested');
+  assert.equal(savedPage.examples.total,1);assert.equal(savedPage.examples.results[0].baseType,'Iron Hat');
+  const missingSet=await queued('test_loot_filter_examples',{baseRevision:context.revision,profileId:'mapping',sampleSetId:'missing'},'failed');
+  assert.match(missingSet.error,/Choose a saved example set/);
   await host('save-reopen');const reopened=await call('get_build_journey');assert.deepEqual(reopened.journey,saved.journey);
   assert.deepEqual((await call('get_loot_filters')).filters,savedFilters.filters);
   const projects=await call('get_crafting_projects');assert.equal(projects.projects[0].run.actions[0].method,'alchemy');assert.equal(projects.projects[0].nativeRecipe.steps[0].method,'alchemy');assert.equal(projects.projects[0].nativeRecipe.steps[0].onFailureAction,'stop');

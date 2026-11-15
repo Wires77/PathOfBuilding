@@ -1,8 +1,8 @@
 -- Cooperative, cancellable native crafting work. A job never applies equipment.
 local M={}
-function M.start(build,run,done,failed,progress)
+function M.start(build,run,done,failed,progress,label)
 	assert(not M.job,"A crafting job is already running; finish or cancel it first")
-	local job={build=build,done=done,failed=failed,progress=progress,started=os.clock(),current={trial=0}}
+	local job={build=build,done=done,failed=failed,progress=progress,label=label,started=os.clock(),current={trial=0}}
 	job.thread=coroutine.create(function()
 		return run(function(state)
 			job.current=state
@@ -17,7 +17,7 @@ function M.tick(build)
 	job.deadline=os.clock()+0.004
 	local sliceStart=os.clock()
 	local ok,result=coroutine.resume(job.thread)
-	if build then require("Modules.PlanningPerformance").record(build,"Crafting simulation slice",os.clock()-sliceStart) end
+	if build then require("Modules.PlanningPerformance").record(build,job.label or "Crafting simulation slice",os.clock()-sliceStart) end
 	if not ok then M.job=nil;if job.failed then pcall(job.failed,tostring(result)) end
 	elseif coroutine.status(job.thread) == "dead" then
 		M.job=nil

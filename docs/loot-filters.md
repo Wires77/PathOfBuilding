@@ -61,6 +61,8 @@ For a filter with `Import` lines, open **Profile tools → Included filter files
 
 ## AI tools
 
+`test_loot_filter_examples` evaluates a saved example set using a kept profile or a supplied draft. Results are paged: use `nextOffset` to continue through the set. Each result retains its example index and explains uncertain matches; long lists of matched rules are marked when truncated. Use `test_loot_filter` for a single example's complete style details. Evaluation yields between examples; compiling the filter and evaluating a single item can still pause briefly. The tool does not change or export the filter; poll the request status as with other AI planning tools.
+
 On **Simulate**, **Paste item** reads visible properties from a game clipboard copy, including influence markers on ordinary equipment. Influence on unique items and maps remains unknown when it cannot be determined reliably. To test explicit-modifier rules, set **Identified** to Yes and enter quoted modifier names in **Has Explicit Mod**. Leave that field blank if the names are unknown, or enter `[]` for a known empty list. **Scene settings** controls shared area/item levels and background; **History** revisits tested samples. **Matched rules** opens the deciding blocks for inspection and editing. **More sound, icon and beam options** includes all twelve icon shapes, colours, sizes, positional/custom alerts and temporary beams. Native previews approximate their geometry; custom audio files must accompany the exported filter.
 
 - **get_loot_filters:** read kept profiles.

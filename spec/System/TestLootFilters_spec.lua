@@ -39,6 +39,24 @@ describe("Build-owned loot filters",function()
 		profile.importFiles={{name="missing.filter",text='Hide\n BaseType "Iron Ring"'}}
 		assert.equal("Hide",filters.simulate(profile,{BaseType="Iron Ring"}).action)
 	end)
+	it("evaluates saved example sets in stable pages without changing the profile",function()
+		local profile=filters.profile("examples","Examples")
+		profile.template='Hide\n BaseType "Iron Hat"\nShow\n ItemLevel >= 80\nHide'
+		profile.sampleSets={{id="drops",title="Drops",samples={{BaseType="Iron Hat"},{BaseType="Iron Ring",ItemLevel=86},{BaseType="Iron Ring"}}}}
+		local before=copyTable(profile);local progress={}
+		local page=filters.simulateExamples(profile,"drops",0,2,function(value) progress[#progress+1]=value.completed end)
+		assert.equal(3,page.total);assert.equal(2,page.nextOffset);assert.same({1,2},progress)
+		assert.equal(0,page.results[1].index);assert.equal("Hide",page.results[1].result.action)
+		assert.equal(1,page.results[2].index);assert.equal("Show",page.results[2].result.action)
+		local last=filters.simulateExamples(profile,"drops",page.nextOffset,2);assert.is_nil(last.nextOffset)
+		assert.equal(2,last.results[1].index);assert.equal("unknown",last.results[1].result.status)
+		assert.same(before,profile);assert.is_false(pcall(filters.simulateExamples,profile,"missing",0,1))
+		assert.is_false(pcall(filters.simulateExamples,profile,"drops",4,1));assert.is_false(pcall(filters.simulateExamples,profile,"drops",0,51))
+		local long=copyTable(profile);long.template=string.rep("Show\n Continue\n",35).."Hide";long.sampleSets[1].samples={{BaseType=string.rep("x",300)}}
+		local compact=filters.simulateExamples(long,"drops",0,1).results[1]
+		assert.is_true(compact.baseTypeTruncated);assert.equal(240,#compact.baseType)
+		assert.is_true(compact.result.matchesTruncated);assert.equal(30,#compact.result.matches);assert.equal("Hide",compact.result.action)
+	end)
 	it("preserves quoted conditions and modifier counts when restyling",function()
 		local library=require("Modules.LootFilterLibrary")
 		for _,condition in ipairs({'HasExplicitMod >=2 "Haast" "Ephij"','HasExplicitMod "1"','BaseType "123"'}) do
