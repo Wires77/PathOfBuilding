@@ -104,7 +104,7 @@ function PoEAPIClass:FetchAuthToken(callback, includeItemFilters)
 	end)
 
 	local authUrl = string.format(
-		"https://www.pathofexile.com/oauth/authorize?client_id=pob&response_type=code&scope=%s&state=%s&code_challenge=%s&code_challenge_method=S256"
+		"https://www.pathofexile.com/oauth/authorize?client_id=<your own client_id>&response_type=code&scope=%s&state=%s&code_challenge=%s&code_challenge_method=S256"
 		, table.concat(requestedScopes, "%20")
 		, initialState
 		, code_challenge
@@ -130,7 +130,7 @@ function PoEAPIClass:FetchAuthToken(callback, includeItemFilters)
 					callback("OAuth state mismatch")
 					return
 				end
-				local formText = "client_id=pob&grant_type=authorization_code&code=" ..
+				local formText = "client_id=<your own client_id>&grant_type=authorization_code&code=" ..
 				code ..
 				"&redirect_uri=http://localhost:" ..
 				port .. "&scope=" .. table.concat(requestedScopes, " ") .. "&code_verifier=" .. code_verifier
