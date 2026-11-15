@@ -169,17 +169,28 @@ end
 function M.simulate(parsed,item)
 	local result={action="Show",status="matched",styles={},matches={},reasons={}}
 	for _,d in ipairs(parsed.diagnostics) do if d.error then return {status="invalid",action="Unknown",styles={},matches={},reasons={"Syntax error on line "..d.line}} end end
-	if #parsed.imports>0 then return {status="unknown",action="Unknown",styles={},matches={},reasons={"External Import files are not resolved. Import a flattened filter for an exact preview."}} end
+	local importIndex=1
+	local function unresolvedImport()
+		local entry=parsed.imports[importIndex]
+		result.status="unknown";result.action="Unknown";result.line=entry.line
+		result.reasons={"Included file '"..entry.file.."' is unresolved and could change this result. Attach it for an exact preview."}
+		return result
+	end
 	for _,rule in ipairs(parsed.rules) do
+		if parsed.imports[importIndex] and parsed.imports[importIndex].line<rule.line then return unresolvedImport() end
 		local matched,unknown=true,{}
 		for _,condition in ipairs(rule.conditions) do local pass,why=M.condition(condition,item);if pass==false then matched=false;break elseif pass==nil then unknown[#unknown+1]=why end end
 		if matched then
 			if #unknown>0 then result.status="unknown";result.action="Unknown";result.reasons=unknown;result.line=rule.line;return result end
 			result.action=rule.action;result.line=rule.line;result.ruleTitle=rule.title;result.matches[#result.matches+1]=rule.line
 			for key,value in pairs(rule.styles) do result.styles[key]=value end
-			if not rule.continue then return result end
+			if not rule.continue then
+				if #parsed.imports>0 then result.reasons[#result.reasons+1]="Later included files are unresolved; this preview assumes they are valid and available when required." end
+				return result
+			end
 		end
 	end
+	if parsed.imports[importIndex] then return unresolvedImport() end
 	return result
 end
 return M

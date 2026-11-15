@@ -22,6 +22,23 @@ describe("Build-owned loot filters",function()
 		local profile=filters.profile("bad-import","Bad import");profile.template='Import "file.filter" Invalid\nShow'
 		local _,report=filters.compile(profile);local found=false;for _,entry in ipairs(report.diagnostics) do if entry.error and entry.error:find("Invalid Import",1,true) then found=true end end;assert.is_true(found)
 	end)
+	it("respects unresolved imports in rule order",function()
+		local raw='Hide\n BaseType "Iron Hat"\nImport "missing.filter"\nShow'
+		local before=parser.simulate(parser.parse(raw),{BaseType="Iron Hat"})
+		assert.equal("matched",before.status);assert.equal("Hide",before.action);assert.equal(1,before.line)
+		assert.matches("Later included files",before.reasons[1])
+		local after=parser.simulate(parser.parse(raw),{BaseType="Iron Ring"})
+		assert.equal("unknown",after.status);assert.equal(3,after.line);assert.matches("missing.filter",after.reasons[1])
+		local continuing=parser.simulate(parser.parse('Hide\n Continue\nImport "missing.filter"\nShow'),{})
+		assert.equal("unknown",continuing.status);assert.equal("Unknown",continuing.action);assert.same({1},continuing.matches)
+		assert.equal("unknown",parser.simulate(parser.parse('Show\n BaseType "Iron Hat"\nImport "missing.filter"'),{}).status)
+		assert.equal("invalid",parser.simulate(parser.parse('Show\nImport "bad.filter" Invalid'),{}).status)
+		local profile=filters.profile("ordered-import","Ordered import");profile.template=raw
+		assert.equal("Hide",filters.simulate(profile,{BaseType="Iron Hat"}).action)
+		assert.equal("unknown",filters.simulate(profile,{BaseType="Iron Ring"}).status)
+		profile.importFiles={{name="missing.filter",text='Hide\n BaseType "Iron Ring"'}}
+		assert.equal("Hide",filters.simulate(profile,{BaseType="Iron Ring"}).action)
+	end)
 	it("preserves quoted conditions and modifier counts when restyling",function()
 		local library=require("Modules.LootFilterLibrary")
 		for _,condition in ipairs({'HasExplicitMod >=2 "Haast" "Ephij"','HasExplicitMod "1"','BaseType "123"'}) do
