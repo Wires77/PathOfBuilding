@@ -2,6 +2,25 @@ describe("Crafting action preconditions",function()
 	local sim=require("Modules.CraftingSimulator")
 	local check=require("Modules.CraftingAvailability").check
 	before_each(function() newBuild() end)
+	it("explains Locus restrictions before offering the action",function()
+		local function shallow(source) local result={};for k,v in pairs(source) do result[k]=v end;return setmetatable(result,getmetatable(source)) end
+		local model=sim.model("Rarity: NORMAL\nIron Hat\nItem Level: 86")
+		local state=copyTable(model.initial);state.corrupted=true
+		assert.is_true(check("locus",state,model))
+		local mod=model.mods[1];local fractured=copyTable(state);fractured.rarity="RARE";fractured.affixes={{id=mod.id,range=0.5,fractured=true}}
+		local allowed,reason=check("locus",fractured,model);assert.is_false(allowed);assert.matches("fractured",reason)
+		local ok,errorText=pcall(sim.action,model,fractured,{method="locus"},function() return 0 end);assert.is_false(ok);assert.is_truthy(errorText:find(reason,1,true))
+		local special=sim.model("Rarity: NORMAL\nSacrificial Garb\nItem Level: 86")
+		local specialState=copyTable(special.initial);specialState.corrupted=true
+		allowed,reason=check("locus",specialState,special);assert.is_false(allowed);assert.matches("special Locus",reason)
+		ok,errorText=pcall(sim.action,special,specialState,{method="locus"},function() return 0 end);assert.is_false(ok);assert.is_truthy(errorText:find(reason,1,true))
+		local synthesised=shallow(model);synthesised.item=shallow(model.item);synthesised.item.synthesised=true
+		allowed,reason=check("locus",state,synthesised);assert.is_false(allowed);assert.matches("special Locus",reason)
+		local locked=copyTable(state);locked.rarity="RARE";locked.affixes={{id=mod.id,range=0.5}}
+		local custom=shallow(model);custom.byId=shallow(model.byId);custom.byId[mod.id]=shallow(model.byId[mod.id]);custom.byId[mod.id][1]="Prefixes Cannot Be Changed"
+		allowed,reason=check("locus",locked,custom);assert.is_false(allowed);assert.matches("meta%-modifier",reason)
+		ok,errorText=pcall(sim.action,custom,locked,{method="locus"},function() return 0 end);assert.is_false(ok);assert.is_truthy(errorText:find(reason,1,true))
+	end)
 	it("explains Aspect crafts without equipment or a free suffix",function()
 		local jewel=sim.model("Rarity: NORMAL\nCobalt Jewel\nItem Level: 86")
 		local allowed,reason=check("beast_aspect",jewel.initial,jewel);assert.is_false(allowed);assert.are.equal("Aspect crafts require equipment.",reason)

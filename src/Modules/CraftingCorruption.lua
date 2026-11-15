@@ -8,6 +8,12 @@ function C.extend(M,A,api)
 	for method,label in pairs(labels) do M.methods[#M.methods+1]=method;M.labels[method]=label end;table.sort(M.methods)
 	local originalModel,originalAction,originalDecorate,originalValidate,originalItem=M.model,M.action,M.decorateItem,M.validateState,M.toItem
 	local originalMatches=M.matches
+	M.methodChecks.locus=function(model,state)
+		local flags=api.flags(model,state)
+		if flags.prefixes or flags.suffixes or flags.attack or flags.caster then return "Locus meta-modifier interactions need additional validation" end
+		for _,entry in ipairs(state.affixes) do if entry.fractured then return "Locus influence outcomes on fractured bases need additional validation" end end
+		if model.item.synthesised or model.item.baseName=="Sacrificial Garb" then return "This special Locus transformation is not modeled" end
+	end
 	function M.implicitTargetReason(model,state,targets)
 		if model and (model.unresolvedCorruption or model.unresolvedEldritch) and not state.destroyed and not state.veil and not state.corruptedImplicits and not state.implicits then
 			for _,group in ipairs(targets) do
@@ -119,9 +125,7 @@ function C.extend(M,A,api)
 			end
 			assert(model.item.type ~= "Jewel" and model.item.type ~= "Flask" and model.item.type ~= "Tincture","This Vaal model currently supports ordinary equipment")
 			if method == "locus" then
-				local flags=api.flags(model,state);assert(not (flags.prefixes or flags.suffixes or flags.attack or flags.caster),"Locus meta-modifier interactions need additional validation")
-				for _,entry in ipairs(state.affixes) do assert(not entry.fractured,"Locus influence outcomes on fractured bases need additional validation") end
-				assert(not model.item.synthesised and model.item.baseName ~= "Sacrificial Garb","This special Locus transformation is not modeled")
+				local reason=M.methodChecks.locus(model,state);assert(not reason,reason)
 			end
 			local outcome=math.floor(random()*4)
 			if outcome == 0 then
